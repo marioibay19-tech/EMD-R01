@@ -25,3 +25,8 @@ python3 -m http.server 8000
 
 The request form currently confirms on the page only; connect it to a backend
 or form service to actually store submissions.
+
+## Hosting (GitHub Pages)
+The site is served directly from the repository root. In **Settings → Pages**,
+set **Source** to *Deploy from a branch*, pick the branch and `/ (root)`.
+It will be available at https://marioibay19-tech.github.io/EMD-R01/.
