@@ -1,9 +1,6 @@
 # DPWH Equipment Management Division — Website
 
-A static, dependency-free web page for the Equipment Management Division (EMD),
-laid out in the style of Philippine government websites (GOVPH top bar, agency
-masthead, banner slides with Philippine Standard Time, quick-link sidebar, and
-full footer).
+A static, dependency-free web page for the Equipment Management Division (EMD).
 
 ## Sections
 - **Fleet status**: searchable, filterable, sortable list of heavy equipment and service vehicles, with condition and next PMS date
