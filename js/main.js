@@ -84,7 +84,6 @@
   navToggle.addEventListener("click", () => {
     const open = nav.classList.toggle("open");
     navToggle.setAttribute("aria-expanded", String(open));
-    navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
   });
   nav.addEventListener("click", (e) => {
     if (e.target.tagName === "A") {
@@ -100,6 +99,47 @@
   $("#stat-serviceable").textContent = count("Serviceable");
   $("#stat-repair").textContent = count("Under repair");
   $("#stat-pms").textContent = pmsDue.length;
+  $("#slide-pms-count").textContent = pmsDue.length;
+
+  // --- Philippine Standard Time -----------------------------------------
+  const clock = $("#pst-clock");
+  function tick() {
+    clock.textContent = new Date().toLocaleString("en-PH", {
+      timeZone: "Asia/Manila", weekday: "long", month: "long", day: "numeric",
+      year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit"
+    });
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // --- Banner carousel ---------------------------------------------------
+  const slides = [...document.querySelectorAll(".slide")];
+  const dotsWrap = $(".carousel-dots");
+  let current = 0;
+  const dots = slides.map((_, i) => {
+    const dot = el("button", { type: "button", "aria-label": `Show slide ${i + 1}` });
+    dot.addEventListener("click", () => { showSlide(i); restart(); });
+    dotsWrap.append(dot);
+    return dot;
+  });
+  function showSlide(i) {
+    current = i;
+    slides.forEach((s, j) => { s.hidden = j !== i; s.classList.toggle("is-active", j === i); });
+    dots.forEach((d, j) => d.setAttribute("aria-current", String(j === i)));
+  }
+  let timer = null;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function restart() {
+    clearInterval(timer);
+    if (!reduceMotion) timer = setInterval(() => showSlide((current + 1) % slides.length), 7000);
+  }
+  const carousel = $("#carousel");
+  carousel.addEventListener("mouseenter", () => clearInterval(timer));
+  carousel.addEventListener("mouseleave", restart);
+  carousel.addEventListener("focusin", () => clearInterval(timer));
+  carousel.addEventListener("focusout", restart);
+  showSlide(0);
+  restart();
 
   // --- Fleet table -------------------------------------------------------
   const search = $("#fleet-search");
@@ -126,7 +166,7 @@
     const q = search.value.trim().toLowerCase();
     const rows = fleet
       .filter((u) =>
-        (!q || [u.propertyNo, u.plateNo, u.makeModel, u.assignedTo].some((v) => v.toLowerCase().includes(q))) &&
+        (!q || [u.propertyNo, u.plateNo, u.type, u.makeModel, u.assignedTo].some((v) => v.toLowerCase().includes(q))) &&
         (!typeFilter.value || u.type === typeFilter.value) &&
         (!conditionFilter.value || u.condition === conditionFilter.value))
       .sort((a, b) => (a[sortKey] || "~").localeCompare(b[sortKey] || "~") * sortDir);
@@ -213,6 +253,18 @@
       selectTab(next);
       next.focus();
     });
+  });
+  // Quick links and footer links that open a specific request form.
+  document.querySelectorAll("[data-open-tab]").forEach((link) => {
+    link.addEventListener("click", () => selectTab(document.getElementById(link.dataset.openTab)));
+  });
+
+  // Top-bar search filters the fleet table.
+  $("#site-search").addEventListener("submit", (e) => {
+    e.preventDefault();
+    search.value = $("#site-search-input").value;
+    renderFleet();
+    $("#fleet").scrollIntoView();
   });
 
   // --- Request forms -----------------------------------------------------
@@ -421,10 +473,19 @@
   window.addEventListener("scroll", hideTip, { passive: true });
 
   // --- Announcements -----------------------------------------------------
-  $("#news-list").replaceChildren(...(window.EMD_ANNOUNCEMENTS || []).map((n) => el("article", { class: "news-item" },
-    el("time", { datetime: n.date, text: fmtDate(n.date) }),
-    el("h3", { text: n.title }),
-    el("p", { text: n.body }))));
+  // The latest announcement is featured; the rest are listed beside it.
+  const [latest, ...older] = window.EMD_ANNOUNCEMENTS || [];
+  if (latest) {
+    $("#news-list").replaceChildren(
+      el("article", { class: "announce-feature" },
+        el("time", { datetime: latest.date, text: fmtDate(latest.date) }),
+        el("h3", { text: latest.title }),
+        el("p", { text: latest.body })),
+      el("div", { class: "announce-list" }, older.map((n) => el("article", { class: "announce-item" },
+        el("h3", { text: n.title }),
+        el("time", { datetime: n.date, text: fmtDate(n.date) }),
+        el("p", { text: n.body })))));
+  }
 
   // --- Organization ------------------------------------------------------
   const org = window.EMD_ORG || { sections: [], officesServed: [] };
