@@ -6,7 +6,7 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
 - **Hero** with live counts (assets tracked, available, in maintenance)
 - **Services**: procurement, inventory & tagging, maintenance, issuance/transfer, disposal, reporting
 - **Equipment inventory**: searchable, filterable (category/status), sortable table
-- **Request form**: loans, acquisitions, repairs, transfers, disposal (client-side validation)
+- **Request form**: maintenance/repair and fuel requisition (client-side validation)
 - **Announcements** and **Contact** details
 
 Responsive down to phone width, with light/dark mode (follows the system, toggle in the header).
