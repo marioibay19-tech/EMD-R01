@@ -5,7 +5,7 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
 ## Sections
 - **Quick actions**: repair request, fuel requisition, repair tracking and the emergency hotline, right below the header
 - **Fleet status**: the division's 133 units with plate no., assigned office, end-user, PAR and LTO registration dates; filter by type, office or PAR status (with PAR, awaiting updated PAR, none on record); LTO registration status (expired, due within 30 days, registered) worked out from the plate number:
-  the last digit sets the month (1 = Jan … 9 = Sep, 0 = Oct), the second-to-last digit the week (1–3: days 1–7, 4–6: 8–14, 7–8: 15–21, 9/0: 22–end), and the year is the one after the recorded LTO registration. Set `ltoDue: "YYYY-MM-DD"` on a unit in `js/data.js` to override it, e.g. for a brand-new vehicle with a multi-year first registration
+  the last digit sets the month (1 = Jan … 9 = Sep, 0 = Oct), the second-to-last digit the week (1–3: days 1–7, 4–6: 8–14, 7–8: 15–21, 9/0: 22–end), and the year is the one after the recorded LTO registration. Set `ltoDue: "YYYY-MM-DD"` on a unit in `js/fleet.js` (or the override field in **Edit**) to override it, e.g. for a brand-new vehicle with a multi-year first registration
 - **PMS schedule**: units due in the next 30 days grouped by month, with overdue / due-soon flags and a "Show all" option
 - **Disaster response readiness**: alert level, emergency hotline, and standby units by type
 - **Requests**: maintenance/repair and fuel requisition forms
@@ -25,8 +25,17 @@ Open `index.html` in a browser, or serve the folder:
 python3 -m http.server 8000
 ```
 
+## Updating the fleet (LTO registration and other details)
+1. On the website, find the unit in **Fleet status** and click **Edit**.
+2. Change the date of LTO registration (or plate no., PAR date, office, end-user, position). The dialog shows the new LTO status before you save.
+3. Changes are saved **in that browser only**; a yellow bar shows how many units changed.
+4. Click **Download fleet.js**, then on GitHub open the `js` folder → **Add file** → **Upload files**, drop in `fleet.js` and **Commit changes**.
+5. The live site updates in a few minutes for everyone. The browser's saved changes clear themselves once the published list matches.
+
+Anyone can make edits in their own browser, but only people with write access to this GitHub repository can publish them.
+
 ## Updating the content
-All content lives in `js/data.js`. The fleet list and office location are real; the other sections still hold **sample data**.
+The fleet list is in `js/fleet.js`; everything else lives in `js/data.js`. The fleet list and office location are real; the other sections still hold **sample data**.
 
 Engine serial numbers are deliberately not published: this repository and site are public.
 
@@ -34,7 +43,7 @@ Engine serial numbers are deliberately not published: this repository and site a
 |---|---|
 | Office name, address, phone, hotline, email | `EMD_CONFIG` |
 | Disaster alert level and message | `EMD_CONFIG.alertLevel` (`"normal"` or `"alert"`), `alertMessage` |
-| Fleet list (and, when available, condition, PMS dates, standby units) | `EMD_FLEET` |
+| Fleet list (and, when available, condition, PMS dates, standby units) | `EMD_FLEET` in `js/fleet.js` (or use **Edit** on the website) |
 | Repairs shown in the tracker | `EMD_REPAIRS` |
 | Citizen's Charter | `EMD_CHARTER` — replace with your approved charter |
 | Downloadable forms | `EMD_FORMS` — put PDFs in `forms/` and set `file` |

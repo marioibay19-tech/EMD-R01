@@ -151,6 +151,14 @@
           </label>
         </div>
 
+        <div class="edit-bar" id="edit-bar" role="status" hidden>
+          <p><b id="edit-count"></b> Saved in this browser only. To publish, download the file and upload it to GitHub as <code>js/fleet.js</code>.</p>
+          <div class="edit-bar-actions">
+            <button class="btn btn-primary btn-sm" type="button" id="edit-download">Download fleet.js</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="edit-discard">Discard changes</button>
+          </div>
+        </div>
+
         <div class="table-wrap">
           <table class="data-table" id="fleet-table">
             <thead>
@@ -162,6 +170,7 @@
                 <th scope="col"><button data-sort="endUser">End-user</button></th>
                 <th scope="col"><button data-sort="parDate">Date of PAR</button></th>
                 <th scope="col"><button data-sort="ltoDate">LTO registration</button></th>
+                <th scope="col"><span class="sr-only">Edit</span></th>
               </tr>
             </thead>
             <tbody id="fleet-body"></tbody>
@@ -431,9 +440,45 @@
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </a>
 
+  <dialog class="unit-dialog" id="unit-dialog" aria-labelledby="unit-dialog-title">
+    <form method="dialog" class="form" id="unit-form" novalidate>
+      <header class="unit-dialog-head">
+        <div>
+          <h2 id="unit-dialog-title">Edit unit</h2>
+          <p id="unit-dialog-sub"></p>
+        </div>
+        <button class="dialog-close" type="button" value="cancel" aria-label="Close">×</button>
+      </header>
+      <div class="form-row">
+        <label class="field"><span>Date of LTO registration</span><input type="date" name="ltoDate"></label>
+        <label class="field"><span>Plate no.</span><input name="plateNo"></label>
+      </div>
+      <p class="lto-preview" id="lto-preview" aria-live="polite"></p>
+      <label class="field"><span>LTO due date override <em>(optional)</em></span>
+        <input type="date" name="ltoDue">
+        <small class="field-hint">Leave blank to use the plate-number schedule. Use for a brand-new vehicle with a multi-year first registration.</small>
+      </label>
+      <div class="form-row">
+        <label class="field"><span>Date of PAR</span><input type="date" name="parDate"></label>
+        <label class="check"><input type="checkbox" name="parAwaiting"> Awaiting updated PAR</label>
+      </div>
+      <label class="field"><span>Assigned office / location</span><input name="office"></label>
+      <div class="form-row">
+        <label class="field"><span>End-user</span><input name="endUser"></label>
+        <label class="field"><span>Position</span><input name="position"></label>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-primary" type="submit" value="save">Save changes</button>
+        <button class="btn btn-ghost" type="button" value="cancel">Cancel</button>
+        <button class="btn btn-link" type="button" id="unit-revert">Undo my changes to this unit</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="chart-tooltip" id="chart-tooltip" role="presentation" hidden></div>
 
   <script src="js/data.js"></script>
+  <script src="js/fleet.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

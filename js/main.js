@@ -94,6 +94,33 @@
     }
   });
 
+  // --- Fleet edits -------------------------------------------------------
+  // Edits made with the "Edit" button are kept in this browser, keyed by the
+  // published property no. + plate no., until someone downloads fleet.js and
+  // uploads it to GitHub. Once the published list matches, they are cleared.
+  const EDITABLE = ["plateNo", "ltoDate", "ltoDue", "parDate", "office", "endUser", "position"];
+  const EDITS_KEY = "emd-fleet-edits";
+  const baseFleet = fleet.map((u) => ({ ...u }));
+  const unitKeys = new Map(fleet.map((u, i) => [u, `${baseFleet[i].propertyNo}|${baseFleet[i].plateNo}`]));
+  let fleetEdits = storage.get(EDITS_KEY, {});
+
+  function applyEdits() {
+    fleet.forEach((u, i) => {
+      const key = unitKeys.get(u);
+      const edit = fleetEdits[key];
+      EDITABLE.forEach((f) => {
+        if (edit && f in edit) u[f] = edit[f];
+        else if (f in baseFleet[i]) u[f] = baseFleet[i][f];
+        else delete u[f];
+      });
+      // Drop edits the published list already contains.
+      if (edit && EDITABLE.every((f) => (edit[f] ?? baseFleet[i][f] ?? "") === (baseFleet[i][f] ?? ""))) delete fleetEdits[key];
+    });
+    storage.set(EDITS_KEY, fleetEdits);
+  }
+  applyEdits();
+  const isEdited = (u) => Boolean(fleetEdits[unitKeys.get(u)]);
+
   // --- Stats -------------------------------------------------------------
   // "Equipment Management Division (A1-2), Regional Office" -> "Equipment Management Division"
   const officeGroup = (o) => o ? o.split(",")[0].replace(/\s*\(.*?\)/, "").replace(/\s+-\s+.*/, "").trim() : "Unassigned";
@@ -184,7 +211,8 @@
       });
 
     fleetBody.replaceChildren(...rows.map((u) => el("tr", {},
-      el("td", { "data-label": "Property no.", text: u.propertyNo }),
+      el("td", { "data-label": "Property no." }, el("span", { class: "cell-main", text: u.propertyNo }),
+        isEdited(u) ? el("small", { class: "edited-tag", text: "Edited" }) : ""),
       el("td", { "data-label": "Plate no.", text: dash(u.plateNo) }),
       el("td", { "data-label": "Equipment" }, el("span", { class: "cell-main", text: u.makeModel }), el("small", { text: u.type })),
       el("td", { "data-label": "Assigned office" }, ...(() => {
@@ -204,6 +232,11 @@
             el("span", { class: st.cls, text: st.label }),
             st.due ? document.createTextNode(` ${st.key === "expired" ? "was due" : "due"} ${st.due.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}`) : "")
         ];
+      })()),
+      el("td", { class: "cell-edit", "data-label": "" }, (() => {
+        const btn = el("button", { type: "button", class: "edit-btn", "aria-label": `Edit ${u.propertyNo} ${u.plateNo || ""}`.trim() }, "Edit");
+        btn.addEventListener("click", () => openUnitDialog(u));
+        return btn;
       })())
     )));
 
@@ -215,6 +248,12 @@
     });
     chipButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.par === parFilter)));
     ltoChipButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.lto === ltoFilter)));
+    // Counts change when units are edited.
+    chipButtons.forEach((btn) => { btn.querySelector("b").textContent = btn.dataset.par ? fleet.filter((u) => parStatus(u) === btn.dataset.par).length : fleet.length; });
+    ltoChipButtons.forEach((btn) => { btn.querySelector("b").textContent = btn.dataset.lto ? fleet.filter((u) => ltoStatus(u).key === btn.dataset.lto).length : fleet.length; });
+    const edited = Object.keys(fleetEdits).length;
+    $("#edit-bar").hidden = edited === 0;
+    $("#edit-count").textContent = `${edited} unit${edited === 1 ? "" : "s"} changed.`;
   }
 
   // PAR status chips filter the table.
@@ -247,6 +286,108 @@
     return btn;
   });
   $("#lto-chips").replaceChildren(el("span", { class: "chips-label", text: "LTO" }), ...ltoChipButtons);
+
+  // Edit dialog. Date inputs use YYYY-MM-DD; the list stores DD/MM/YYYY.
+  const dialog = $("#unit-dialog");
+  const unitForm = $("#unit-form");
+  const toDMY = (iso) => iso ? iso.split("-").reverse().join("/") : "";
+  let editing = null;
+  let initial = {};
+
+  function previewLto() {
+    const f = unitForm.elements;
+    const draft = { plateNo: f.plateNo.value.trim(), ltoDate: toDMY(f.ltoDate.value), ltoDue: f.ltoDue.value };
+    const st = ltoStatus(draft);
+    const due = st.due ? st.due.toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" }) : "";
+    $("#lto-preview").textContent = st.key === "na" ? "No plate number: no LTO status."
+      : st.key === "none" ? "Enter the registration date to work out the next due date."
+      : `LTO status: ${st.label}. ${st.key === "expired" ? "Was due" : "Next due"} ${due}.`;
+    $("#lto-preview").className = "lto-preview lto-" + st.key;
+  }
+
+  function openUnitDialog(u) {
+    editing = u;
+    const f = unitForm.elements;
+    initial = {
+      plateNo: u.plateNo || "", ltoDate: dateKey(u.ltoDate), ltoDue: u.ltoDue || "",
+      parDate: dateKey(u.parDate), parAwaiting: parStatus(u) === "awaiting",
+      office: u.office || "", endUser: u.endUser || "", position: u.position || ""
+    };
+    Object.entries(initial).forEach(([k, v]) => { if (k === "parAwaiting") f[k].checked = v; else f[k].value = v; });
+    f.parDate.disabled = initial.parAwaiting;
+    $("#unit-dialog-title").textContent = `Edit ${u.propertyNo}`;
+    $("#unit-dialog-sub").textContent = u.makeModel;
+    $("#unit-revert").hidden = !isEdited(u);
+    previewLto();
+    dialog.showModal();
+  }
+
+  ["plateNo", "ltoDate", "ltoDue"].forEach((n) => unitForm.elements[n].addEventListener("input", previewLto));
+  unitForm.elements.parAwaiting.addEventListener("change", (e) => { unitForm.elements.parDate.disabled = e.target.checked; });
+  dialog.querySelectorAll('button[value="cancel"]').forEach((b) => b.addEventListener("click", () => dialog.close()));
+
+  function saveEdit(u, values) {
+    const i = fleet.indexOf(u);
+    const key = unitKeys.get(u);
+    const diff = {};
+    EDITABLE.forEach((field) => {
+      if ((values[field] ?? "") !== (baseFleet[i][field] ?? "")) diff[field] = values[field];
+    });
+    if (Object.keys(diff).length) fleetEdits[key] = diff; else delete fleetEdits[key];
+    applyEdits();
+    renderFleet();
+  }
+
+  unitForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = unitForm.elements;
+    const u = editing;
+    // Untouched date fields keep their recorded text (e.g. "N/A").
+    const values = {
+      plateNo: f.plateNo.value.trim(),
+      ltoDate: f.ltoDate.value === initial.ltoDate ? u.ltoDate || "" : toDMY(f.ltoDate.value),
+      ltoDue: f.ltoDue.value,
+      parDate: f.parAwaiting.checked ? (initial.parAwaiting ? u.parDate : "Waiting for updated PAR")
+        : f.parDate.value === initial.parDate && !initial.parAwaiting ? u.parDate || "" : toDMY(f.parDate.value),
+      office: f.office.value.trim(), endUser: f.endUser.value.trim(), position: f.position.value.trim()
+    };
+    saveEdit(u, values);
+    dialog.close();
+  });
+
+  $("#unit-revert").addEventListener("click", () => {
+    delete fleetEdits[unitKeys.get(editing)];
+    applyEdits();
+    renderFleet();
+    dialog.close();
+  });
+
+  $("#edit-discard").addEventListener("click", () => {
+    if (!confirm("Discard all fleet changes saved in this browser?")) return;
+    fleetEdits = {};
+    applyEdits();
+    renderFleet();
+  });
+
+  // Rebuild js/fleet.js from the current list, one unit per line.
+  $("#edit-download").addEventListener("click", () => {
+    const header = [
+      "// EMD fleet list. Updated from the website: use \"Edit\" on a unit, then",
+      "// \"Download fleet.js\" and upload the file here (js/fleet.js) on GitHub.",
+      "// Engine serial numbers are left out on purpose because this file is public.",
+      "// Dates are kept as recorded (DD/MM/YYYY). Optional fields per unit:",
+      "//   ltoDue: \"YYYY-MM-DD\"  overrides the computed LTO due date",
+      "//   condition: \"Serviceable\" | \"Under repair\" | \"Unserviceable\"",
+      "//   nextPms: \"YYYY-MM-DD\", pmsType: \"250-hr service\", standby: true"
+    ].join("\n");
+    const body = fleet.map((u) => "  " + JSON.stringify(u, (k, v) => (k === "ltoDue" && !v ? undefined : v))).join(",\n");
+    const blob = new Blob([`${header}\nwindow.EMD_FLEET = [\n${body}\n];\n`], { type: "text/javascript" });
+    const link = el("a", { href: URL.createObjectURL(blob), download: "fleet.js" });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  });
 
   [search, typeFilter, officeFilter].forEach((node) => node.addEventListener("input", renderFleet));
   document.querySelectorAll("#fleet-table [data-sort]").forEach((btn) => {
