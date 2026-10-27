@@ -60,3 +60,7 @@ window.EMD_FORMS = [
   {"title":"Property acknowledgement receipt (PAR)","description":"Accountability record when equipment is issued to personnel.","file":null},
   {"title":"Inventory and inspection report of unserviceable property","description":"For units recommended for disposal.","file":null}
 ];
+
+// Admin page password, stored as a salted PBKDF2-SHA256 hash (not the password
+// itself). Change it on the Admin page. null: the Admin page opens without one.
+window.EMD_ADMIN_PASSWORD = {"salt":"70904c9f7215c1d88ba88ea789ad3e99","iterations":310000,"hash":"5aaed4604db30d018e417d6f71c3d403a28d0d77c7af3940be2a878f4d66da93"};

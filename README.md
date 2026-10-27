@@ -57,7 +57,7 @@ Open **admin.html** (linked as **Admin** in the footer).
 
 To offer a PDF form for download, click **Choose PDF…** on the form, then upload the same PDF to the `forms` folder on GitHub (the page shows the exact file name to use and whether it is on the website yet). A link to a file elsewhere, such as Google Drive, also works.
 
-Anyone can open the Admin page, but only people who can commit to this GitHub repository can publish. To let a colleague publish, add them under **Settings → Collaborators** on GitHub.
+The Admin page asks for a password (change it under **Password** on the page; the new one takes effect once content.js is uploaded). Only a salted hash of it is stored, in `js/content.js`. The password keeps casual visitors out of the editor, but the site has no server, so it is not real security: the actual protection is that only people who can commit to this GitHub repository can publish. To let a colleague publish, add them under **Settings → Collaborators** on GitHub.
 
 ## Updating the content
 The fleet list is in `js/fleet.js`, request monitoring in `js/requests.js`, and announcements, the organization chart and forms in `js/content.js`; everything else lives in `js/data.js`. The fleet list and office location are real; the other sections still hold **sample data**.

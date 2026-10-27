@@ -51,7 +51,10 @@
         }),
         officesServed: (org.officesServed || []).map(str).filter(Boolean)
       },
-      forms: (c.forms || []).map((f) => ({ title: str(f.title), description: str(f.description), file: str(f.file) || null }))
+      forms: (c.forms || []).map((f) => ({ title: str(f.title), description: str(f.description), file: str(f.file) || null })),
+      password: c.password && c.password.hash
+        ? { salt: str(c.password.salt), iterations: Number(c.password.iterations), hash: str(c.password.hash) }
+        : null
     };
   }
   // Drop rows left completely empty.
@@ -67,7 +70,8 @@
   const published = clean({
     announcements: window.EMD_ANNOUNCEMENTS,
     org: window.EMD_ORG,
-    forms: window.EMD_FORMS
+    forms: window.EMD_FORMS,
+    password: window.EMD_ADMIN_PASSWORD
   });
   const same = (a, b) => JSON.stringify(publishable(a)) === JSON.stringify(publishable(b));
 
@@ -296,6 +300,10 @@
       "// Forms. file: a PDF in forms/ (e.g. \"forms/trip-ticket.pdf\"), a link (https://…),",
       "// one of the website's printable forms (.html), or null for \"Available at the EMD office\".",
       `window.EMD_FORMS = [${lines(c.forms)}];`,
+      "",
+      "// Admin page password, stored as a salted PBKDF2-SHA256 hash (not the password",
+      "// itself). Change it on the Admin page. null: the Admin page opens without one.",
+      `window.EMD_ADMIN_PASSWORD = ${JSON.stringify(c.password)};`,
       ""
     ].join("\n");
   }
@@ -322,11 +330,74 @@
     location.reload();
   });
 
-  renderNews();
-  renderSections();
-  renderOrgPreview();
-  renderForms();
-  updateBar();
+  // --- Password ----------------------------------------------------------
+  // A lock against casual visitors. The real protection is GitHub: nothing
+  // reaches the website unless someone with access to the repository uploads it.
+  const SESSION_KEY = "emd-admin-session";
+  const hex = (buf) => Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+  async function hashPassword(password, salt, iterations) {
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits(
+      { name: "PBKDF2", hash: "SHA-256", salt: new TextEncoder().encode(salt), iterations }, key, 256);
+    return hex(bits);
+  }
+  const session = {
+    get() { try { return sessionStorage.getItem(SESSION_KEY); } catch (e) { return null; } },
+    set(v) { try { sessionStorage.setItem(SESSION_KEY, v); } catch (e) { /* storage unavailable */ } },
+    clear() { try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { /* storage unavailable */ } }
+  };
+
+  const live = published.password;
+  function unlock() {
+    $("#admin-lock").hidden = true;
+    $("#main").hidden = false;
+    $("#sign-out").hidden = !live;
+    renderNews();
+    renderSections();
+    renderOrgPreview();
+    renderForms();
+    updateBar();
+  }
+
+  $("#login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = $("#login-status");
+    const pw = $("#login-password");
+    status.textContent = "Checking…";
+    let ok = false;
+    try { ok = (await hashPassword(pw.value, live.salt, live.iterations)) === live.hash; } catch (err) { /* no WebCrypto */ }
+    if (!ok) {
+      status.textContent = window.crypto && crypto.subtle ? "Wrong password. Try again." : "This browser can't check the password. Open the page over https.";
+      pw.select();
+      return;
+    }
+    session.set(live.hash);
+    pw.value = "";
+    status.textContent = "";
+    unlock();
+  });
+
+  $("#sign-out").addEventListener("click", () => {
+    session.clear();
+    location.reload();
+  });
+
+  $("#password-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const a = $("#new-password"), b = $("#new-password-2"), status = $("#password-status");
+    if (a.value.length < 10) { status.textContent = "Use at least 10 characters."; a.focus(); return; }
+    if (a.value !== b.value) { status.textContent = "The two passwords don't match."; b.select(); return; }
+    const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+    const iterations = 310000;
+    content.password = { salt, iterations, hash: await hashPassword(a.value, salt, iterations) };
+    save();
+    a.value = b.value = "";
+    status.textContent = "New password set. Download content.js and upload it to GitHub to start using it.";
+  });
+
+  // No password published yet, or already signed in this browser session.
+  if (!live || session.get() === live.hash) unlock();
+  else $("#login-password").focus();
 
   // Exposed for the website's preview and for tests.
   window.EMD_ADMIN = { contentFile, publishable };

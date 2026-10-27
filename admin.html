@@ -26,7 +26,17 @@
     </div>
   </header>
 
-  <main id="main" class="container admin-main">
+  <div class="container admin-main admin-lock" id="admin-lock">
+    <form class="form admin-login" id="login-form">
+      <h1>Admin sign-in</h1>
+      <p>Enter the admin password to edit the website's announcements, organization chart and forms.</p>
+      <label class="field"><span>Password</span><input type="password" id="login-password" autocomplete="current-password" required></label>
+      <button class="btn btn-primary" type="submit">Sign in</button>
+      <p class="form-status" id="login-status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <main id="main" class="container admin-main" hidden>
     <section class="admin-intro">
       <h1>Update the website</h1>
       <p>Edit the announcements, organization chart and forms below. Changes are kept in this browser until you publish them:</p>
@@ -51,6 +61,8 @@
       <a href="#a-news">Announcements</a>
       <a href="#a-org">Organization</a>
       <a href="#a-forms">Forms</a>
+      <a href="#a-password">Password</a>
+      <button class="btn btn-link admin-signout" type="button" id="sign-out">Sign out</button>
     </nav>
 
     <section class="admin-section" id="a-news">
@@ -91,6 +103,19 @@
       </div>
       <p class="field-hint">To offer a PDF for download, choose it below, then upload the same PDF to <a id="upload-forms" target="_blank" rel="noopener">the forms folder on GitHub</a> without renaming it. You can also paste a link to a file elsewhere, such as Google Drive.</p>
       <div class="admin-list" id="forms-edit"></div>
+    </section>
+
+    <section class="admin-section" id="a-password">
+      <div class="admin-head"><h2>Change password</h2></div>
+      <form class="admin-card form" id="password-form">
+        <p class="field-hint">Use at least 10 characters. The new password works once you download content.js and upload it to GitHub; until then, the current one still applies.</p>
+        <div class="form-row">
+          <label class="field"><span>New password</span><input type="password" id="new-password" autocomplete="new-password" minlength="10" required></label>
+          <label class="field"><span>Type it again</span><input type="password" id="new-password-2" autocomplete="new-password" required></label>
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">Set new password</button>
+        <p class="form-status" id="password-status" role="status" aria-live="polite"></p>
+      </form>
     </section>
   </main>
 
