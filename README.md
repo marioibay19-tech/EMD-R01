@@ -14,7 +14,8 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
   (request received → pre-repair inspection → job order → repair → post-repair inspection → released), from the published monitoring list
 - **Forms**: blank maintenance request form and fuel slip (printable), trip ticket, inspection reports, job order, PAR, and more
 - **Reports**: operating hours by equipment type and monthly fuel consumption
-- **Announcements**, **Organization** (division chief, sections, offices served) and **Contact**
+- **Announcements**, **Organization** (division chief, sections, staff, offices served) and **Contact**
+- **Admin** (`admin.html`): edit announcements, the organization chart and forms without touching code
 
 Responsive down to phone width, with light/dark mode (follows the system, toggle in the header).
 
@@ -48,12 +49,22 @@ Anyone can make edits in their own browser, but only people with write access to
 
 Requests made on another person's computer stay on that computer, so log the paper slip or request at the EMD office. The list is public; contact numbers and emails are not recorded. As with the fleet, have one person publish at a time.
 
+## Admin page: announcements, organization chart and forms
+Open **admin.html** (linked as **Admin** in the footer).
+1. Post, edit or delete announcements; edit the division head, sections, section heads, staff and offices served; add, reorder or remove forms. Changes are saved in that browser as you type.
+2. Click **Preview on the website** to see the site with your changes.
+3. Click **Download content.js**, then use the link on the page to open the `js` folder on GitHub, drop in `content.js` and **Commit changes**. The site updates in about a minute.
+
+To offer a PDF form for download, click **Choose PDF…** on the form, then upload the same PDF to the `forms` folder on GitHub (the page shows the exact file name to use and whether it is on the website yet). A link to a file elsewhere, such as Google Drive, also works.
+
+Anyone can open the Admin page, but only people who can commit to this GitHub repository can publish. To let a colleague publish, add them under **Settings → Collaborators** on GitHub.
+
 ## Updating the content
-The fleet list is in `js/fleet.js`; everything else lives in `js/data.js`. The fleet list and office location are real; the other sections still hold **sample data**.
+The fleet list is in `js/fleet.js`, request monitoring in `js/requests.js`, and announcements, the organization chart and forms in `js/content.js`; everything else lives in `js/data.js`. The fleet list and office location are real; the other sections still hold **sample data**.
 
 Engine serial numbers are deliberately not published: this repository and site are public.
 
-| What | Where in `js/data.js` |
+| What | Where (in `js/data.js` unless noted) |
 |---|---|
 | Office name, address, phone, hotline, email | `EMD_CONFIG` |
 | Fuel slip letterhead and signatories (Approved by, Issued by) | `EMD_CONFIG.fuelSlip` |
@@ -61,10 +72,10 @@ Engine serial numbers are deliberately not published: this repository and site a
 | Disaster alert level and message | `EMD_CONFIG.alertLevel` (`"normal"` or `"alert"`), `alertMessage` |
 | Fleet list (and, when available, condition, PMS dates, standby units) | `EMD_FLEET` in `js/fleet.js` (or use **Edit** on the website) |
 | Request monitoring and repair tracker | `EMD_REQUESTS` in `js/requests.js` (or use **Request monitoring** on the website); statuses in `EMD_FUEL_STATUSES` and `EMD_REPAIR_STAGES` |
-| Downloadable forms | `EMD_FORMS` — put PDFs in `forms/` and set `file` |
+| Downloadable forms | `EMD_FORMS` in `js/content.js` (or use the Admin page) — PDFs go in `forms/` |
 | Report figures | `EMD_REPORTS` |
-| Organization and offices served | `EMD_ORG` |
-| Announcements | `EMD_ANNOUNCEMENTS` |
+| Organization and offices served | `EMD_ORG` in `js/content.js` (or use the Admin page) |
+| Announcements | `EMD_ANNOUNCEMENTS` in `js/content.js` (or use the Admin page) |
 
 When the real data is in, set `EMD_CONFIG.sampleData` to `false` to remove the notice banner.
 

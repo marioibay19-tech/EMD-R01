@@ -20,8 +20,12 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
+  <div class="sample-banner preview-banner" id="preview-banner" hidden>
+    Preview of unpublished changes from the Admin page. Visitors don't see these until content.js is uploaded to GitHub. <a href="admin.html">Back to Admin</a>
+  </div>
+
   <div class="sample-banner" id="sample-banner" hidden>
-    Some sections still show sample data (reports, announcements and contact numbers). Replace them in <code>js/data.js</code> before publishing.
+    Some sections still show sample data (reports, announcements and contact numbers). Replace them before publishing.
   </div>
 
   <header class="site-header">
@@ -492,6 +496,7 @@
           <li><a href="#reports">Reports</a></li>
           <li><a href="#announcements">Announcements</a></li>
           <li><a href="#about">Organization</a></li>
+          <li><a href="admin.html">Admin</a></li>
         </ul>
       </div>
     </div>
@@ -595,6 +600,7 @@
   <div class="chart-tooltip" id="chart-tooltip" role="presentation" hidden></div>
 
   <script src="js/data.js"></script>
+  <script src="js/content.js"></script>
   <script src="js/fleet.js"></script>
   <script src="js/requests.js"></script>
   <script src="js/main.js"></script>

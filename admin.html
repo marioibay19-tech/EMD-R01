@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMD Admin</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#0d2d57">
+  <link rel="icon" href="img/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="admin">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">EMD</span>
+        <span class="brand-text">
+          <span class="brand-agency">Equipment Management Division</span>
+          <span class="brand-office">Admin</span>
+        </span>
+      </a>
+      <a class="btn btn-ghost btn-sm admin-back" href="index.html">← Website</a>
+    </div>
+  </header>
+
+  <main id="main" class="container admin-main">
+    <section class="admin-intro">
+      <h1>Update the website</h1>
+      <p>Edit the announcements, organization chart and forms below. Changes are kept in this browser until you publish them:</p>
+      <ol class="admin-steps">
+        <li>Make your changes. Use <b>Preview on the website</b> to check them.</li>
+        <li>Click <b>Download content.js</b>.</li>
+        <li>Open <a id="upload-js" target="_blank" rel="noopener">the js folder on GitHub</a>, drag the downloaded <code>content.js</code> in, and click <b>Commit changes</b>. The website updates in about a minute.</li>
+      </ol>
+      <p class="field-hint">Only people who can sign in to the website's GitHub repository can publish. Anyone can open this page, but their changes stay in their own browser.</p>
+    </section>
+
+    <div class="edit-bar admin-bar" id="admin-bar" role="status">
+      <p id="admin-state"></p>
+      <div class="edit-bar-actions">
+        <button class="btn btn-primary btn-sm" type="button" id="admin-download">Download content.js</button>
+        <a class="btn btn-ghost btn-sm" href="index.html?preview#announcements" target="_blank" rel="noopener">Preview on the website</a>
+        <button class="btn btn-link" type="button" id="admin-discard">Discard changes</button>
+      </div>
+    </div>
+
+    <nav class="admin-tabs" aria-label="Admin sections">
+      <a href="#a-news">Announcements</a>
+      <a href="#a-org">Organization</a>
+      <a href="#a-forms">Forms</a>
+    </nav>
+
+    <section class="admin-section" id="a-news">
+      <div class="admin-head">
+        <h2>Announcements</h2>
+        <button class="btn btn-primary btn-sm" type="button" id="add-news">+ New announcement</button>
+      </div>
+      <p class="field-hint">Shown newest first on the website.</p>
+      <div class="admin-list" id="news-edit"></div>
+    </section>
+
+    <section class="admin-section" id="a-org">
+      <div class="admin-head"><h2>Organization chart</h2></div>
+      <div class="admin-card form">
+        <h3>Head of the division</h3>
+        <div class="form-row">
+          <label class="field"><span>Name</span><input id="chief-name"></label>
+          <label class="field"><span>Position</span><input id="chief-role" placeholder="Division Chief"></label>
+        </div>
+      </div>
+      <div class="admin-head admin-subhead">
+        <h3>Sections and units</h3>
+        <button class="btn btn-primary btn-sm" type="button" id="add-section">+ Add section</button>
+      </div>
+      <div class="admin-list" id="sections-edit"></div>
+      <div class="admin-card form">
+        <h3>Offices served</h3>
+        <label class="field"><span>One office per line</span><textarea id="offices" rows="8"></textarea></label>
+      </div>
+      <h3 class="admin-preview-title">Preview</h3>
+      <div class="org" id="org-chart"></div>
+    </section>
+
+    <section class="admin-section" id="a-forms">
+      <div class="admin-head">
+        <h2>Forms</h2>
+        <button class="btn btn-primary btn-sm" type="button" id="add-form">+ Add form</button>
+      </div>
+      <p class="field-hint">To offer a PDF for download, choose it below, then upload the same PDF to <a id="upload-forms" target="_blank" rel="noopener">the forms folder on GitHub</a> without renaming it. You can also paste a link to a file elsewhere, such as Google Drive.</p>
+      <div class="admin-list" id="forms-edit"></div>
+    </section>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/content.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

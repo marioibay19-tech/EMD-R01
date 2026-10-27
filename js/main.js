@@ -50,6 +50,12 @@
     }
   };
 
+  // Announcements, organization and forms (js/content.js). With ?preview, show
+  // the unpublished draft from the Admin page instead.
+  const draft = new URLSearchParams(location.search).has("preview") ? storage.get("emd-admin-draft", null) : null;
+  const content = draft || { announcements: window.EMD_ANNOUNCEMENTS, org: window.EMD_ORG, forms: window.EMD_FORMS };
+  $("#preview-banner").hidden = !draft;
+
   const conditionClass = (c) => "badge badge-" + c.toLowerCase().replace(/\s+/g, "-");
 
   // --- Config ------------------------------------------------------------
@@ -849,13 +855,17 @@
   });
 
   // --- Forms -------------------------------------------------------------
-  $("#forms-list").replaceChildren(...(window.EMD_FORMS || []).map((f) => el("li", { class: "form-card" },
-    el("div", {}, el("h3", { text: f.title }), el("p", { text: f.description })),
-    f.file && f.file.endsWith(".html")
+  // Only files on this site or http(s) links.
+  const safeHref = (f) => f && !/^[a-z][a-z0-9+.-]*:/i.test(f) || /^https?:\/\//i.test(f || "");
+  $("#forms-list").replaceChildren(...(content.forms || []).filter((f) => f.title).map((f) => el("li", { class: "form-card" },
+    el("div", {}, el("h3", { text: f.title }), f.description ? el("p", { text: f.description }) : ""),
+    !safeHref(f.file)
+      ? el("span", { class: "form-unavailable", text: "Available at the EMD office" })
+      : f.file.endsWith(".html")
       ? el("a", { class: "btn btn-ghost btn-sm", href: f.file, target: "_blank", rel: "noopener", text: "Open printable form" })
-      : f.file
-      ? el("a", { class: "btn btn-ghost btn-sm", href: f.file, download: "", text: "Download PDF" })
-      : el("span", { class: "form-unavailable", text: "Available at the EMD office" }))));
+      : /^https?:/i.test(f.file)
+      ? el("a", { class: "btn btn-ghost btn-sm", href: f.file, target: "_blank", rel: "noopener", text: "Open form" })
+      : el("a", { class: "btn btn-ghost btn-sm", href: f.file, download: "", text: "Download PDF" }))));
 
   // --- Charts ------------------------------------------------------------
   const tooltip = $("#chart-tooltip");
@@ -979,18 +989,28 @@
   window.addEventListener("scroll", hideTip, { passive: true });
 
   // --- Announcements -----------------------------------------------------
-  $("#news-list").replaceChildren(...(window.EMD_ANNOUNCEMENTS || []).map((n) => el("article", { class: "news-item" },
-    el("time", { datetime: n.date, text: fmtDate(n.date) }),
+  const news = (content.announcements || []).filter((n) => n.title || n.body)
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  $("#news-list").replaceChildren(...news.map((n) => el("article", { class: "news-item" },
+    n.date ? el("time", { datetime: n.date, text: fmtDate(n.date) }) : "",
     el("h3", { text: n.title }),
     el("p", { text: n.body }))));
+  $("#announcements").hidden = !news.length;
 
   // --- Organization ------------------------------------------------------
-  const org = window.EMD_ORG || { sections: [], officesServed: [] };
-  const person = (p, cls) => el("div", { class: "org-node " + cls }, el("b", { text: p.role }), el("span", { text: p.name }));
+  const org = content.org || {};
+  const sections = (org.sections || []).filter((s) => s.role || s.name);
+  const servedOffices = (org.officesServed || []).map((o) => o.trim()).filter(Boolean);
+  const person = (p, cls) => el("div", { class: "org-node " + cls },
+    el("b", { text: p.role }), el("span", { text: p.name }),
+    (p.staff || []).some((x) => x.trim())
+      ? el("ul", { class: "org-staff" }, p.staff.filter((x) => x.trim()).map((x) => el("li", { text: x })))
+      : "");
   if (org.chief) {
     $("#org-chart").replaceChildren(
-      person(org.chief, "org-chief"),
-      el("div", { class: "org-sections" }, org.sections.map((s) => person(s, ""))));
+      person(org.chief, sections.length ? "org-chief" : "org-chief org-alone"),
+      sections.length ? el("div", { class: "org-sections" }, sections.map((s) => person(s, ""))) : "");
   }
-  $("#offices-served").replaceChildren(...org.officesServed.map((o) => el("li", { text: o })));
+  $("#offices-served").replaceChildren(...servedOffices.map((o) => el("li", { text: o })));
+  $(".served").hidden = !servedOffices.length;
 })();
