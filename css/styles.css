@@ -493,29 +493,11 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
   .stepper li::after { top: -12px; left: 14px; width: 2px; height: 14px; }
 }
 
-/* Citizen's Charter ----------------------------------------------------- */
-.charter { display: grid; gap: 12px; max-width: 960px; margin: 0 auto; }
-.charter-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0 24px; }
-.charter-item summary {
-  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
-  padding: 18px 0; cursor: pointer; font-weight: 600; font-size: 1.05rem; list-style: none;
-}
-.charter-item summary::-webkit-details-marker { display: none; }
-.charter-item summary > span:first-child::before { content: "▸ "; color: var(--muted); }
-.charter-item[open] summary > span:first-child::before { content: "▾ "; }
-.charter-item[open] { padding-bottom: 20px; }
-.charter-item h4 { margin: 20px 0 8px; font-size: .95rem; }
-.charter-meta { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 0; }
-.charter-meta dt { color: var(--muted); font-size: .8rem; font-weight: 500; }
-.charter-meta dd { margin: 0; font-size: .92rem; }
-.table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
-.charter-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-.charter-table th, .charter-table td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
-.charter-table th { background: var(--surface-alt); font-size: .78rem; font-weight: 600; color: var(--muted); }
-.charter-table tbody tr:last-child td { border-bottom: 0; }
-.table-scroll .charter-table { min-width: 640px; }
-.charter-total { margin: 12px 0 0; }
-.charter-note { text-align: center; color: var(--muted); font-size: .9rem; margin: 24px auto 0; max-width: 640px; }
+/* Plain tables (chart data) */
+.simple-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.simple-table th, .simple-table td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+.simple-table th { background: var(--surface-alt); font-size: .78rem; font-weight: 600; color: var(--muted); }
+.simple-table tbody tr:last-child td { border-bottom: 0; }
 
 /* Forms ----------------------------------------------------------------- */
 .forms-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
@@ -576,8 +558,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
 
 
 [hidden] { display: none !important; }
-.charter > * { min-width: 0; }
-.charter-item summary .chip { white-space: normal; }
 #fleet-table td:nth-child(6), #fleet-table td:nth-child(7) { white-space: nowrap; }
 
 /* Two-line table cells (equipment + type, end-user + position) */

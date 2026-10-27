@@ -12,7 +12,6 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
 - **Request monitoring**: fuel requisitions (Pending → Approved → Issued / Disapproved) and maintenance / repair requests (by repair stage), with totals, filters and search
 - **Repair tracker**: look up a repair by reference number and see its stage
   (request received → pre-repair inspection → job order → repair → post-repair inspection → released), from the published monitoring list
-- **Citizen's Charter** (RA 11032): requirements, steps and processing time per service
 - **Forms**: blank fuel slip (printable), trip ticket, inspection reports, job order, PAR, and more
 - **Reports**: operating hours by equipment type and monthly fuel consumption
 - **Announcements**, **Organization** (division chief, sections, offices served) and **Contact**
@@ -54,7 +53,6 @@ Engine serial numbers are deliberately not published: this repository and site a
 | Disaster alert level and message | `EMD_CONFIG.alertLevel` (`"normal"` or `"alert"`), `alertMessage` |
 | Fleet list (and, when available, condition, PMS dates, standby units) | `EMD_FLEET` in `js/fleet.js` (or use **Edit** on the website) |
 | Request monitoring and repair tracker | `EMD_REQUESTS` in `js/requests.js` (or use **Request monitoring** on the website); statuses in `EMD_FUEL_STATUSES` and `EMD_REPAIR_STAGES` |
-| Citizen's Charter | `EMD_CHARTER` — replace with your approved charter |
 | Downloadable forms | `EMD_FORMS` — put PDFs in `forms/` and set `file` |
 | Report figures | `EMD_REPORTS` |
 | Organization and offices served | `EMD_ORG` |

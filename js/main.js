@@ -825,23 +825,6 @@
       job.remarks ? el("p", { class: "track-remarks", text: job.remarks }) : ""));
   });
 
-  // --- Citizen's Charter -------------------------------------------------
-  const table = (head, rows) => el("div", { class: "table-scroll" }, el("table", { class: "charter-table" },
-    el("thead", {}, el("tr", {}, head.map((h) => el("th", { scope: "col", text: h })))),
-    el("tbody", {}, rows.map((r) => el("tr", {}, r.map((c) => el("td", { text: c })))))));
-
-  $("#charter-list").replaceChildren(...(window.EMD_CHARTER || []).map((svc, i) => el("details", { class: "charter-item", ...(i === 0 ? { open: "" } : {}) },
-    el("summary", {}, el("span", { text: svc.service }), el("span", { class: "chip", text: svc.total })),
-    el("dl", { class: "charter-meta" },
-      el("div", {}, el("dt", { text: "Classification" }), el("dd", { text: svc.classification })),
-      el("div", {}, el("dt", { text: "Type of transaction" }), el("dd", { text: svc.transaction })),
-      el("div", {}, el("dt", { text: "Who may avail" }), el("dd", { text: svc.whoMayAvail }))),
-    el("h4", { text: "Requirements" }),
-    table(["Checklist of requirements", "Where to secure"], svc.requirements),
-    el("h4", { text: "Steps" }),
-    table(["Client steps", "Agency actions", "Fees", "Processing time", "Person responsible"], svc.steps),
-    el("p", { class: "charter-total" }, el("b", { text: "Total processing time: " }), document.createTextNode(svc.total)))));
-
   // --- Forms -------------------------------------------------------------
   $("#forms-list").replaceChildren(...(window.EMD_FORMS || []).map((f) => el("li", { class: "form-card" },
     el("div", {}, el("h3", { text: f.title }), el("p", { text: f.description })),
@@ -952,7 +935,7 @@
   }
 
   function dataTable(container, data, valueHead) {
-    container.replaceChildren(el("table", { class: "charter-table" },
+    container.replaceChildren(el("table", { class: "simple-table" },
       el("thead", {}, el("tr", {}, el("th", { scope: "col", text: "" }), el("th", { scope: "col", text: valueHead }))),
       el("tbody", {}, data.map((d) => el("tr", {}, el("td", { text: d.label }), el("td", { text: fmtNum(d.value) }))))));
   }

@@ -1,6 +1,5 @@
-// Site content. The fleet list and office location are real; the Citizen's
-// Charter, reports, announcements, contact numbers and section heads are
-// still SAMPLE data. Replace them, then set sampleData to false to hide
+// Site content. The fleet list and office location are real; reports,
+// announcements, contact numbers and section heads are still SAMPLE data. Replace them, then set sampleData to false to hide
 // the notice banner.
 
 window.EMD_CONFIG = {
@@ -48,58 +47,6 @@ window.EMD_FORMS = [
   { title: "Equipment condition report", description: "Periodic report on the condition of an assigned unit.", file: null },
   { title: "Property acknowledgement receipt (PAR)", description: "Accountability record when equipment is issued to personnel.", file: null },
   { title: "Inventory and inspection report of unserviceable property", description: "For units recommended for disposal.", file: null }
-];
-
-// Citizen's Charter. Replace with your office's approved charter.
-window.EMD_CHARTER = [
-  {
-    service: "Fuel requisition",
-    classification: "Simple",
-    transaction: "G2G – Government to Government",
-    whoMayAvail: "DPWH offices and project units with assigned equipment",
-    requirements: [
-      ["Fuel requisition slip (1 original)", "EMD office / Forms section of this page"],
-      ["Approved trip ticket (1 copy)", "Requesting office"]
-    ],
-    steps: [
-      ["Submit the fuel requisition slip and trip ticket.", "Receive and check the documents; verify the unit's fuel record.", "None", "15 minutes", "Fuel and lubricants staff"],
-      ["Wait for approval.", "Review and approve the requisition.", "None", "30 minutes", "Division Chief or authorized officer"],
-      ["Receive the fuel or fuel withdrawal slip.", "Issue fuel and record it in the fuel logbook.", "None", "15 minutes", "Fuel and lubricants staff"]
-    ],
-    total: "1 hour"
-  },
-  {
-    service: "Repair and maintenance request",
-    classification: "Complex",
-    transaction: "G2G – Government to Government",
-    whoMayAvail: "DPWH offices and project units with assigned equipment",
-    requirements: [
-      ["Repair request (via this page or written request)", "Requesting office"],
-      ["Latest equipment condition report", "Requesting office"]
-    ],
-    steps: [
-      ["Submit the repair request.", "Log the request and issue a reference number.", "None", "15 minutes", "Records staff"],
-      ["Bring the unit to the motor pool or wait for the inspection team.", "Conduct pre-repair inspection and prepare the cost estimate.", "None", "1 working day", "Equipment inspector"],
-      ["Wait for the job order.", "Approve and issue the job order.", "None", "1 working day", "Division Chief"],
-      ["Wait for completion.", "Carry out the repair.", "None", "Depends on the repair", "Maintenance section"],
-      ["Receive the unit.", "Conduct post-repair inspection and release the unit.", "None", "1 working day", "Equipment inspector"]
-    ],
-    total: "3 working days, plus repair time"
-  },
-  {
-    service: "Emergency equipment deployment",
-    classification: "Simple",
-    transaction: "G2G – Government to Government",
-    whoMayAvail: "DPWH offices and disaster risk reduction and management offices",
-    requirements: [
-      ["Request by phone, radio or written request", "Requesting office"]
-    ],
-    steps: [
-      ["Call the EMD hotline with the location and the equipment needed.", "Log the request and check available standby units.", "None", "15 minutes", "Duty officer"],
-      ["Coordinate on site.", "Dispatch the unit and operator with a trip ticket.", "None", "Depends on distance", "Motor pool and dispatch"]
-    ],
-    total: "Dispatch within 1 hour of request, travel time excluded"
-  }
 ];
 
 // Reports. Utilization in operating hours; fuel in litres.
