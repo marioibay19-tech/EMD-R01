@@ -18,6 +18,13 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
 
 Responsive down to phone width, with light/dark mode (follows the system, toggle in the header).
 
+## Using it on a phone
+Open https://marioibay19-tech.github.io/EMD-R01/ in the phone's browser. To keep it on the home screen like an app (it opens full screen with the EMD icon):
+- **Android (Chrome):** tap the **⋮** menu → **Add to Home screen** (or **Install app**).
+- **iPhone (Safari):** tap **Share** → **Add to Home Screen**.
+
+The fleet list shows 25 units at a time with **Show more**; search and filters always cover all units. The fuel slip shrinks to fit the screen but still prints or saves as a full A4 page. The app needs an internet connection; it always shows the latest published data.
+
 ## Run locally
 Open `index.html` in a browser, or serve the folder:
 

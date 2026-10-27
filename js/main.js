@@ -154,6 +154,9 @@
   };
   const parStatus = (u) => /waiting/i.test(u.parDate) ? "awaiting" : dateKey(u.parDate) ? "with" : "none";
   let parFilter = "";
+  // Show the list in pages so phones don't scroll through all 133 units.
+  const FLEET_PAGE = 25;
+  let fleetLimit = FLEET_PAGE;
 
   // LTO renewal schedule from the plate number: the last digit sets the month
   // (1 = Jan ... 9 = Sep, 0 = Oct) and the second-to-last digit the week
@@ -216,7 +219,8 @@
         return va.localeCompare(vb, "en", { numeric: true }) * sortDir;
       });
 
-    fleetBody.replaceChildren(...rows.map((u) => el("tr", {},
+    const shown = rows.slice(0, fleetLimit);
+    fleetBody.replaceChildren(...shown.map((u) => el("tr", {},
       el("td", { "data-label": "Property no." }, el("span", { class: "cell-main", text: u.propertyNo }),
         isEdited(u) ? el("small", { class: "edited-tag", text: "Edited" }) : ""),
       el("td", { "data-label": "Plate no.", text: dash(u.plateNo) }),
@@ -247,7 +251,12 @@
     )));
 
     $("#fleet-empty").hidden = rows.length > 0;
-    $("#fleet-count").textContent = `Showing ${rows.length} of ${fleet.length} units`;
+    $("#fleet-count").textContent = rows.length === fleet.length
+      ? `Showing ${shown.length} of ${fleet.length} units`
+      : `Showing ${shown.length} of ${rows.length} matching units (${fleet.length} in the fleet)`;
+    const more = $("#fleet-more");
+    more.hidden = shown.length >= rows.length;
+    more.textContent = `Show ${Math.min(FLEET_PAGE, rows.length - shown.length)} more`;
     document.querySelectorAll("#fleet-table [data-sort]").forEach((btn) => {
       btn.closest("th").setAttribute("aria-sort",
         btn.dataset.sort === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none");
@@ -272,7 +281,7 @@
     const n = key ? fleet.filter((u) => parStatus(u) === key).length : fleet.length;
     const btn = el("button", { type: "button", class: `cond-chip ${cls}`.trim(), "data-par": key },
       el("span", { text: label }), el("b", { text: String(n) }));
-    btn.addEventListener("click", () => { parFilter = key; renderFleet(); });
+    btn.addEventListener("click", () => { parFilter = key; fleetLimit = FLEET_PAGE; renderFleet(); });
     return btn;
   });
   $("#condition-chips").replaceChildren(el("span", { class: "chips-label", text: "PAR" }), ...chipButtons);
@@ -288,7 +297,7 @@
     const n = key ? fleet.filter((u) => ltoStatus(u).key === key).length : fleet.length;
     const btn = el("button", { type: "button", class: `cond-chip ${cls}`.trim(), "data-lto": key },
       el("span", { text: label }), el("b", { text: String(n) }));
-    btn.addEventListener("click", () => { ltoFilter = key; renderFleet(); });
+    btn.addEventListener("click", () => { ltoFilter = key; fleetLimit = FLEET_PAGE; renderFleet(); });
     return btn;
   });
   $("#lto-chips").replaceChildren(el("span", { class: "chips-label", text: "LTO" }), ...ltoChipButtons);
@@ -395,7 +404,9 @@
     setTimeout(() => URL.revokeObjectURL(link.href), 1000);
   });
 
-  [search, typeFilter, officeFilter].forEach((node) => node.addEventListener("input", renderFleet));
+  // A new search or filter starts again from the first page.
+  [search, typeFilter, officeFilter].forEach((node) => node.addEventListener("input", () => { fleetLimit = FLEET_PAGE; renderFleet(); }));
+  $("#fleet-more").addEventListener("click", () => { fleetLimit += FLEET_PAGE; renderFleet(); });
   document.querySelectorAll("#fleet-table [data-sort]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const key = btn.dataset.sort;

@@ -651,3 +651,27 @@ input:disabled { opacity: .5; }
 .toolbar .btn { flex: none; }
 @media (max-width: 900px) { .data-table td .clamp { max-width: none; -webkit-line-clamp: 4; } }
 #req-table td:nth-child(2) { white-space: nowrap; }
+
+/* Phones ---------------------------------------------------------------- */
+/* 16px+ text in form fields stops iPhone Safari zooming in when one is tapped */
+@media (max-width: 900px) {
+  input, select, textarea { font-size: 16px; }
+}
+@media (max-width: 640px) {
+  .section { padding: 56px 0; }
+  #services { padding-top: 48px; }
+  .section-head { margin-bottom: 24px; }
+  .hero { padding: 48px 0 96px; }
+  .monitor-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .monitor-stats .stat { padding: 14px; }
+  .monitor-stats .stat dd { font-size: 1.4rem; }
+  .to-top { width: 40px; height: 40px; right: 12px; bottom: 12px; }
+}
+/* Comfortable tap targets */
+.footer-links, .footer-list { gap: 2px; }
+.footer-links a, .footer-list a { display: inline-block; padding: 8px 0; }
+.chart-table summary { padding: 10px 0; }
+.radio-group label { min-height: 40px; }
+.radio-group input[type="radio"], .check input[type="checkbox"] { width: 20px; height: 20px; flex: none; }
+.fleet-more { display: block; margin: 14px auto 0; }
+.footer-inner a { display: inline-block; padding: 8px 0; }

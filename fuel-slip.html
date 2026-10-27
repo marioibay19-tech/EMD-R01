@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d2d57">
+  <link rel="icon" href="img/icon-192.png">
   <title>Requisition and Issue Slip (Fuel)</title>
   <style>
     @page { size: A4 portrait; margin: 12mm 8mm; }
@@ -31,9 +33,9 @@
       background: #fff; box-shadow: 0 2px 12px rgba(0, 0, 0, .15);
     }
     .sheet-inner { padding: 4mm 3mm; }
+    /* On narrow screens the script scales the A4 sheet down to fit; printing is unaffected */
     @media (max-width: 760px) {
-      .sheet { width: auto; margin: 8px; overflow-x: auto; }
-      .sheet-inner { min-width: 188mm; }
+      .sheet { margin: 8px auto; }
     }
 
     .appendix { text-align: right; font-style: italic; font-size: 9pt; margin: 0 0 2mm; }
@@ -83,7 +85,7 @@
     @media print {
       body { background: #fff; }
       .toolbar { display: none; }
-      .sheet { width: auto; min-height: 0; margin: 0; box-shadow: none; }
+      .sheet { width: auto; min-height: 0; margin: 0; box-shadow: none; zoom: 1 !important; }
       .sheet-inner { padding: 0 .4mm; }
     }
   </style>
@@ -264,6 +266,16 @@
       }
 
       document.getElementById("print").addEventListener("click", function () { window.print(); });
+
+      // Fit the A4 sheet to the screen width on phones.
+      var sheet = document.querySelector(".sheet");
+      function fit() {
+        sheet.style.zoom = "";
+        var room = document.documentElement.clientWidth - 16;
+        if (sheet.offsetWidth > room) sheet.style.zoom = String(room / sheet.offsetWidth);
+      }
+      fit();
+      window.addEventListener("resize", fit);
     })();
   </script>
 </body>
