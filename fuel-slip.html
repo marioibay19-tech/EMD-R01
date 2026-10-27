@@ -114,7 +114,7 @@
         </colgroup>
         <tr class="meta">
           <td colspan="6"><p>Division : <span class="fill" data-f="division"></span></p><p>Office : <span class="fill" data-f="office"></span></p></td>
-          <td colspan="3"><p>Responsibility Center Code :</p><p>RIS No. :</p></td>
+          <td colspan="3"><p>Responsibility Center Code :</p><p>RIS No. : <span class="fill" data-f="risNo"></span></p></td>
         </tr>
         <tr class="sec">
           <th colspan="5">Requisition</th>
@@ -238,7 +238,7 @@
       var values = {
         division: get("division"), office: get("office"),
         description: get("fuel") ? "Fuel, " + get("fuel") : "Fuel,",
-        litres: get("litres"), purpose: get("purpose"),
+        litres: get("litres"), purpose: get("purpose"), risNo: get("risNo"),
         propertyNo: get("propertyNo"), forUse: get("forUse"), tripTicket: get("tripTicket"),
         odoPresent: get("odoPresent"), odoPrevious: get("odoPrevious"),
         distance: isFinite(present) && isFinite(previous) && present >= previous ? (present - previous).toLocaleString("en-PH") : "",
