@@ -660,3 +660,14 @@ input:disabled { opacity: .5; }
 .odometer-group .field > span { font-weight: 500; font-size: .85rem; }
 .odometer-group legend em, .form .field em { color: var(--muted); font-style: normal; font-weight: 400; }
 .slip-print { justify-self: start; }
+
+/* Request monitoring ---------------------------------------------------- */
+.monitor-stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin: 0 0 18px; }
+.monitor-stats .stat dd { font-size: 1.7rem; }
+.stat-note { margin: 2px 0 0; color: var(--muted); font-size: .8rem; }
+.badge-info { background: var(--primary-soft); color: var(--primary); }
+.data-table td .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 320px; }
+#req-table td .badge { margin-bottom: 2px; }
+.toolbar .btn { flex: none; }
+@media (max-width: 900px) { .data-table td .clamp { max-width: none; -webkit-line-clamp: 4; } }
+#req-table td:nth-child(2) { white-space: nowrap; }

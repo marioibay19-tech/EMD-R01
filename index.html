@@ -14,7 +14,7 @@
   <a class="skip-link" href="#main">Skip to content</a>
 
   <div class="sample-banner" id="sample-banner" hidden>
-    Some sections still show sample data (repairs, Citizen's Charter, reports, announcements and contact numbers). Replace them in <code>js/data.js</code> before publishing.
+    Some sections still show sample data (Citizen's Charter, reports, announcements and contact numbers). Replace them in <code>js/data.js</code> before publishing.
   </div>
 
   <header class="site-header">
@@ -34,6 +34,7 @@
         <a href="#pms">PMS</a>
         <a href="#readiness">Readiness</a>
         <a href="#request">Requests</a>
+        <a href="#monitoring">Monitoring</a>
         <a href="#charter">Citizen's Charter</a>
         <a href="#forms">Forms</a>
         <a href="#reports">Reports</a>
@@ -316,12 +317,64 @@
           <form id="track-form" class="track-form">
             <label class="field field-grow">
               <span class="sr-only">Repair reference number</span>
-              <input name="ref" placeholder="Reference no., e.g. RR-2026-0142" required>
+              <input name="ref" placeholder="Reference no., e.g. RR-20261027-482" required>
             </label>
             <button class="btn btn-ghost" type="submit">Track</button>
           </form>
           <div id="track-result" aria-live="polite"></div>
         </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="monitoring">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">Monitoring</p>
+          <h2>Request monitoring</h2>
+          <p>Fuel requisitions and maintenance / repair requests, and where each one stands.</p>
+        </header>
+
+        <div class="monitor-stats" id="monitor-stats"></div>
+
+        <div class="condition-chips" id="req-kind-chips" role="group" aria-label="Filter by request type"></div>
+        <div class="toolbar">
+          <label class="field field-grow">
+            <span class="sr-only">Search requests</span>
+            <input id="req-search" type="search" placeholder="Search reference, unit, requester, office or details…" autocomplete="off">
+          </label>
+          <label class="field">
+            <span class="sr-only">Status</span>
+            <select id="req-status"><option value="">All statuses</option></select>
+          </label>
+          <button class="btn btn-primary" type="button" id="req-add">Add request</button>
+        </div>
+
+        <div class="edit-bar" id="req-edit-bar" role="status" hidden>
+          <p><b id="req-edit-count"></b> Saved in this browser only. To publish, download the file and upload it to GitHub as <code>js/requests.js</code>.</p>
+          <div class="edit-bar-actions">
+            <button class="btn btn-primary btn-sm" type="button" id="req-download">Download requests.js</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="req-discard">Discard changes</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="req-table">
+            <thead>
+              <tr>
+                <th scope="col">Reference</th>
+                <th scope="col">Date</th>
+                <th scope="col">Unit</th>
+                <th scope="col">Requested by</th>
+                <th scope="col">Details</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="sr-only">Edit</span></th>
+              </tr>
+            </thead>
+            <tbody id="req-body"></tbody>
+          </table>
+          <p id="req-empty" class="empty" hidden>No requests yet. Requests prepared on this computer appear here automatically; use <b>Add request</b> to log one received on paper.</p>
+        </div>
+        <p class="table-meta" id="req-count" aria-live="polite"></p>
       </div>
     </section>
 
@@ -493,10 +546,61 @@
     </form>
   </dialog>
 
+  <dialog class="unit-dialog" id="req-dialog" aria-labelledby="req-dialog-title">
+    <form method="dialog" class="form" id="req-form" novalidate>
+      <header class="unit-dialog-head">
+        <div>
+          <h2 id="req-dialog-title">Request</h2>
+          <p id="req-dialog-sub"></p>
+        </div>
+        <button class="dialog-close" type="button" value="cancel" aria-label="Close">×</button>
+      </header>
+      <fieldset class="field radio-group" id="req-kind-group">
+        <legend>Type of request</legend>
+        <label><input type="radio" name="kind" value="fuel" required> Fuel requisition</label>
+        <label><input type="radio" name="kind" value="repair"> Maintenance / repair</label>
+      </fieldset>
+      <div class="form-row">
+        <label class="field"><span>Status</span><select name="status" required></select></label>
+        <label class="field"><span>Date requested</span><input type="date" name="date" required></label>
+      </div>
+      <label class="field"><span>Remarks <em>(optional)</em></span><input name="remarks" placeholder="e.g. Parts delivered; road test pending"></label>
+      <label class="field"><span>Property / plate no.</span><input name="unit" list="unit-list" required></label>
+      <div class="form-row">
+        <label class="field"><span>Requested by</span><input name="requestedBy" required></label>
+        <label class="field"><span>Office / division</span><input name="office"></label>
+      </div>
+      <div class="req-fuel-fields">
+        <div class="form-row">
+          <label class="field"><span>Fuel type</span>
+            <select name="fuel"><option value="">Choose…</option><option>Diesel</option><option>Gasoline</option></select>
+          </label>
+          <label class="field"><span>Liters requested</span><input name="litres" type="number" min="1" step="1"></label>
+        </div>
+        <div class="form-row">
+          <label class="field"><span>Liters issued <em>(optional)</em></span><input name="issuedLitres" type="number" min="0" step="1"></label>
+          <label class="field"><span>RIS No. <em>(optional)</em></span><input name="risNo"></label>
+        </div>
+        <div class="form-row">
+          <label class="field"><span>Requested date from</span><input name="dateFrom" type="date"></label>
+          <label class="field"><span>Requested date to</span><input name="dateTo" type="date"></label>
+        </div>
+      </div>
+      <label class="field"><span id="req-details-label">Details</span><textarea name="details" rows="3"></textarea></label>
+      <div class="dialog-actions">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <button class="btn btn-ghost" type="button" value="cancel">Cancel</button>
+        <button class="btn btn-link" type="button" id="req-delete">Delete request</button>
+      </div>
+      <p class="form-status" id="req-form-status" role="status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
   <div class="chart-tooltip" id="chart-tooltip" role="presentation" hidden></div>
 
   <script src="js/data.js"></script>
   <script src="js/fleet.js"></script>
+  <script src="js/requests.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

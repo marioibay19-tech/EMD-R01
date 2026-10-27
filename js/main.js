@@ -4,7 +4,7 @@
   const config = window.EMD_CONFIG || {};
   const fleet = window.EMD_FLEET || [];
   const stages = window.EMD_REPAIR_STAGES || [];
-  const repairs = window.EMD_REPAIRS || [];
+  const fuelStatuses = window.EMD_FUEL_STATUSES || ["Pending", "Approved", "Issued", "Disapproved"];
   const $ = (sel) => document.querySelector(sel);
   const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -513,11 +513,236 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
-  // --- Request forms -----------------------------------------------------
-  // No backend yet: submissions are confirmed on the page, and repair
-  // requests are remembered in this browser so they can be tracked.
-  const localRepairs = () => storage.get("emd-repairs", []);
+  // --- Request monitoring ------------------------------------------------
+  // Published requests come from js/requests.js. New requests and changes
+  // are kept in this browser (by id) until someone downloads requests.js and
+  // uploads it to GitHub; changes the published list already has are cleared.
+  const REQ_KEY = "emd-request-edits";
+  const REQ_FIELDS = ["id", "kind", "date", "requestedBy", "office", "unit", "details", "fuel", "litres",
+    "dateFrom", "dateTo", "risNo", "issuedLitres", "status", "updated", "remarks"];
+  const publishedReqs = window.EMD_REQUESTS || [];
+  const localISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const todayISO = localISO(today);
+  const cleanReq = (r) => Object.fromEntries(REQ_FIELDS.filter((k) => r[k] !== undefined && r[k] !== "").map((k) => [k, r[k]]));
+  const sameReq = (a, b) => REQ_FIELDS.every((k) => String(a[k] ?? "") === String(b[k] ?? ""));
+  let reqEdits = storage.get(REQ_KEY, {});
+  Object.keys(reqEdits).forEach((id) => {
+    const pub = publishedReqs.find((r) => r.id === id);
+    const edit = reqEdits[id];
+    if (edit.deleted ? !pub : pub && sameReq(edit, pub)) delete reqEdits[id];
+  });
+  storage.set(REQ_KEY, reqEdits);
 
+  function allRequests() {
+    const byId = new Map(publishedReqs.map((r) => [r.id, r]));
+    Object.entries(reqEdits).forEach(([id, r]) => { if (r.deleted) byId.delete(id); else byId.set(id, r); });
+    return [...byId.values()].sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.id.localeCompare(a.id));
+  }
+  function newRequestId(prefix) {
+    const taken = new Set(allRequests().map((r) => r.id));
+    let id;
+    do id = `${prefix}-${todayISO.replace(/-/g, "")}-${Math.floor(Math.random() * 900) + 100}`; while (taken.has(id));
+    return id;
+  }
+  function saveRequest(r) {
+    reqEdits[r.id] = cleanReq({ ...r, updated: todayISO });
+    storage.set(REQ_KEY, reqEdits);
+    renderRequests();
+  }
+
+  const KINDS = { fuel: "Fuel requisition", repair: "Maintenance / repair" };
+  const statusesFor = (kind) => kind === "fuel" ? fuelStatuses : stages;
+  const statusClass = (r) => ({
+    Pending: "badge badge-under-repair", Approved: "badge badge-info", Issued: "badge badge-serviceable",
+    Disapproved: "badge badge-unserviceable", Released: "badge badge-serviceable"
+  })[r.status] || "badge badge-under-repair";
+  const isOpen = (r) => r.kind === "fuel" ? r.status === "Pending" || r.status === "Approved" : r.status !== "Released";
+  const unitParts = (text) => {
+    const i = (text || "").indexOf(" — ");
+    return i < 0 ? [text || "—", ""] : [text.slice(0, i), text.slice(i + 3)];
+  };
+  const shortDate = (s) => s ? parseDate(s).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "";
+
+  const reqSearch = $("#req-search");
+  const reqStatus = $("#req-status");
+  let reqKind = "";
+  [["fuel", fuelStatuses], ["repair", stages]].forEach(([kind, list]) => {
+    const group = el("optgroup", { label: KINDS[kind] });
+    list.forEach((s) => group.append(new Option(s, `${kind}:${s}`)));
+    reqStatus.append(group);
+  });
+
+  const kindChips = [["", "All requests"], ["fuel", "Fuel requisitions"], ["repair", "Maintenance / repair"]].map(([key, label]) => {
+    const btn = el("button", { type: "button", class: "cond-chip", "data-kind": key }, el("span", { text: label }), el("b", { text: "0" }));
+    btn.addEventListener("click", () => { reqKind = key; renderRequests(); });
+    return btn;
+  });
+  $("#req-kind-chips").replaceChildren(...kindChips);
+
+  function renderRequests() {
+    const all = allRequests();
+    const q = reqSearch.value.trim().toLowerCase();
+    const [statusKind, statusName] = reqStatus.value ? reqStatus.value.split(":") : ["", ""];
+    const rows = all.filter((r) =>
+      (!reqKind || r.kind === reqKind) &&
+      (!statusName || (r.kind === statusKind && r.status === statusName)) &&
+      (!q || [r.id, r.unit, r.requestedBy, r.office, r.details, r.risNo, r.remarks].some((v) => (v || "").toLowerCase().includes(q))));
+
+    $("#req-body").replaceChildren(...rows.map((r) => {
+      const [prop, model] = unitParts(r.unit);
+      const fuelLine = r.kind === "fuel"
+        ? [r.fuel, r.litres ? `${r.litres} L requested` : "", r.issuedLitres ? `${r.issuedLitres} L issued` : "",
+           r.dateFrom ? (r.dateTo && r.dateTo !== r.dateFrom ? `${shortDate(r.dateFrom)}–${shortDate(r.dateTo)}` : shortDate(r.dateFrom)) : "",
+           r.risNo ? `RIS ${r.risNo}` : ""].filter(Boolean).join(" · ")
+        : "";
+      const editBtn = el("button", { type: "button", class: "edit-btn", "aria-label": `Edit ${r.id}` }, "Edit");
+      editBtn.addEventListener("click", () => openReqDialog(r));
+      return el("tr", {},
+        el("td", { "data-label": "Reference" }, el("span", { class: "cell-main", text: r.id }), el("small", { text: KINDS[r.kind] })),
+        el("td", { "data-label": "Date", text: fmtDate(r.date) }),
+        el("td", { "data-label": "Unit" }, el("span", { class: "cell-main", text: prop }), model ? el("small", { text: model }) : ""),
+        el("td", { "data-label": "Requested by" }, el("span", { class: "cell-main", text: r.requestedBy || "—" }), r.office ? el("small", { text: r.office }) : ""),
+        el("td", { "data-label": "Details" },
+          fuelLine ? el("span", { class: "cell-main", text: fuelLine }) : "",
+          r.details ? el("small", { class: "clamp", text: r.details }) : ""),
+        el("td", { "data-label": "Status" }, el("span", { class: statusClass(r), text: r.status }),
+          el("small", { text: `Updated ${fmtDate(r.updated || r.date)}` }),
+          r.remarks ? el("small", { text: r.remarks }) : ""),
+        el("td", { class: "cell-edit", "data-label": "" }, editBtn));
+    }));
+
+    $("#req-empty").hidden = rows.length > 0;
+    $("#req-count").textContent = all.length ? `Showing ${rows.length} of ${all.length} requests` : "";
+    kindChips.forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(btn.dataset.kind === reqKind));
+      btn.querySelector("b").textContent = btn.dataset.kind ? all.filter((r) => r.kind === btn.dataset.kind).length : all.length;
+    });
+
+    // Summary tiles
+    const month = todayISO.slice(0, 7);
+    const fuel = all.filter((r) => r.kind === "fuel");
+    const repair = all.filter((r) => r.kind === "repair");
+    const issuedThisMonth = fuel.filter((r) => r.status === "Issued" && (r.updated || r.date || "").startsWith(month))
+      .reduce((sum, r) => sum + Number(r.issuedLitres || r.litres || 0), 0);
+    const tile = (label, value, note) => el("div", { class: "stat" }, el("dt", { text: label }), el("dd", { text: String(value) }), note ? el("p", { class: "stat-note", text: note }) : "");
+    $("#monitor-stats").replaceChildren(
+      tile("Fuel pending", fuel.filter((r) => r.status === "Pending").length, "Waiting for approval"),
+      tile("Fuel approved", fuel.filter((r) => r.status === "Approved").length, "Approved, not yet issued"),
+      tile("Liters issued", issuedThisMonth.toLocaleString("en-PH"), "This month"),
+      tile("Open repairs", repair.filter(isOpen).length, `${repair.filter((r) => r.status === "Released").length} released`));
+
+    const edited = Object.keys(reqEdits).length;
+    $("#req-edit-bar").hidden = edited === 0;
+    $("#req-edit-count").textContent = `${edited} request${edited === 1 ? "" : "s"} added or changed.`;
+  }
+  [reqSearch, reqStatus].forEach((n) => n.addEventListener("input", renderRequests));
+
+  // Add / edit dialog
+  const reqDialog = $("#req-dialog");
+  const reqForm = $("#req-form");
+  let editingReq = null;
+
+  function setReqKind(kind) {
+    const f = reqForm.elements;
+    const current = f.status.value;
+    f.status.replaceChildren(...statusesFor(kind).map((s) => new Option(s, s)));
+    if (statusesFor(kind).includes(current)) f.status.value = current;
+    reqForm.querySelector(".req-fuel-fields").hidden = kind !== "fuel";
+    f.fuel.required = f.litres.required = kind === "fuel";
+    $("#req-details-label").textContent = kind === "fuel" ? "Purpose" : "Problem description";
+  }
+
+  function openReqDialog(r) {
+    editingReq = r;
+    const f = reqForm.elements;
+    reqForm.reset();
+    $("#req-form-status").textContent = "";
+    reqForm.querySelectorAll(".invalid").forEach((n) => n.classList.remove("invalid"));
+    const kind = r ? r.kind : "fuel";
+    reqForm.querySelectorAll('[name="kind"]').forEach((k) => { k.checked = k.value === kind; k.disabled = Boolean(r); });
+    setReqKind(kind);
+    const values = r || { date: todayISO, status: statusesFor(kind)[0] };
+    ["status", "date", "remarks", "unit", "requestedBy", "office", "fuel", "litres", "issuedLitres", "risNo", "dateFrom", "dateTo", "details"]
+      .forEach((k) => { f[k].value = values[k] ?? ""; });
+    $("#req-dialog-title").textContent = r ? `Update ${r.id}` : "Add request";
+    $("#req-dialog-sub").textContent = r ? KINDS[r.kind] : "Log a request received on paper or by phone.";
+    $("#req-delete").hidden = !r;
+    reqDialog.showModal();
+  }
+
+  reqForm.querySelectorAll('[name="kind"]').forEach((k) => k.addEventListener("change", () => setReqKind(k.value)));
+  reqDialog.querySelectorAll('button[value="cancel"]').forEach((b) => b.addEventListener("click", () => reqDialog.close()));
+  $("#req-add").addEventListener("click", () => openReqDialog(null));
+
+  reqForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = reqForm.elements;
+    reqForm.querySelectorAll(".invalid").forEach((n) => n.classList.remove("invalid"));
+    const invalid = [...f].filter((n) => n.willValidate && !n.closest("[hidden]") && !n.checkValidity());
+    if (invalid.length) {
+      invalid.forEach((n) => (n.type === "radio" ? n.closest("fieldset") : n).classList.add("invalid"));
+      invalid[0].focus();
+      $("#req-form-status").textContent = "Please complete the highlighted fields.";
+      $("#req-form-status").className = "form-status error";
+      return;
+    }
+    const kind = editingReq ? editingReq.kind : reqForm.querySelector('[name="kind"]:checked').value;
+    const record = {
+      ...(editingReq || {}),
+      id: editingReq ? editingReq.id : newRequestId(kind === "fuel" ? "FR" : "RR"),
+      kind, status: f.status.value, date: f.date.value, remarks: f.remarks.value.trim(),
+      unit: f.unit.value.trim(), requestedBy: f.requestedBy.value.trim(), office: f.office.value.trim(),
+      details: f.details.value.trim()
+    };
+    if (kind === "fuel") {
+      Object.assign(record, { fuel: f.fuel.value, litres: f.litres.value, issuedLitres: f.issuedLitres.value,
+        risNo: f.risNo.value.trim(), dateFrom: f.dateFrom.value, dateTo: f.dateTo.value });
+    }
+    saveRequest(record);
+    reqDialog.close();
+  });
+
+  $("#req-delete").addEventListener("click", () => {
+    if (!editingReq || !confirm(`Delete ${editingReq.id} from the monitoring list?`)) return;
+    const published = publishedReqs.some((r) => r.id === editingReq.id);
+    if (published) reqEdits[editingReq.id] = { deleted: true }; else delete reqEdits[editingReq.id];
+    storage.set(REQ_KEY, reqEdits);
+    renderRequests();
+    reqDialog.close();
+  });
+
+  $("#req-discard").addEventListener("click", () => {
+    if (!confirm("Discard all request changes saved in this browser?")) return;
+    reqEdits = {};
+    storage.set(REQ_KEY, reqEdits);
+    renderRequests();
+  });
+
+  // Rebuild js/requests.js from the current list, one request per line.
+  $("#req-download").addEventListener("click", () => {
+    const header = [
+      "// EMD request monitoring: fuel requisitions and maintenance / repair requests.",
+      "// Updated from the website: log or update requests in \"Request monitoring\",",
+      "// then \"Download requests.js\" and upload the file here (js/requests.js) on GitHub.",
+      "// This file is public: contact numbers and emails are not recorded.",
+      "// Fields: id, kind (\"fuel\" | \"repair\"), date (YYYY-MM-DD), requestedBy, office,",
+      "// unit, details, status, updated (YYYY-MM-DD), remarks; fuel also has fuel,",
+      "// litres, dateFrom, dateTo, risNo, issuedLitres."
+    ].join("\n");
+    const list = allRequests().map((r) => "  " + JSON.stringify(cleanReq(r)));
+    const blob = new Blob([`${header}\nwindow.EMD_REQUESTS = [\n${list.join(",\n")}${list.length ? "\n" : ""}];\n`], { type: "text/javascript" });
+    const link = el("a", { href: URL.createObjectURL(blob), download: "requests.js" });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  });
+
+  renderRequests();
+
+  // --- Request forms -----------------------------------------------------
+  // No backend yet: nothing is sent to the EMD office. Each request is logged
+  // in this browser's Request monitoring list so staff can publish it.
   document.querySelectorAll(".request-form").forEach((form) => {
     const status = form.querySelector(".form-status");
     const slipLink = form.querySelector(".slip-print");
@@ -539,16 +764,17 @@
         return;
       }
 
-      const ref = `${form.dataset.prefix}-${today.getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
       if (form.dataset.prefix === "RR") {
-        const unit = form.elements.unit.value;
-        storage.set("emd-repairs", [...localRepairs(), {
-          ref, propertyNo: unit.split(" — ")[0], unit, stage: 0,
-          updated: today.toISOString().slice(0, 10), remarks: "Waiting for pre-repair inspection."
-        }]);
-        status.textContent = `Repair request received. Reference: ${ref}. Use it to track the repair below.`;
+        const id = newRequestId("RR");
+        const extra = [`Location: ${f.location.value.trim()}`, `Reading: ${f.reading.value.trim()}`,
+          `Can operate: ${f.operable.value}`].join("; ");
+        saveRequest({
+          id, kind: "repair", date: todayISO, status: stages[0], unit: f.unit.value.trim(),
+          requestedBy: f.name.value.trim(), office: f.office.value.trim(), details: `${f.details.value.trim()} (${extra})`
+        });
+        status.textContent = `Repair request logged as ${id} in Request monitoring on this computer. The website doesn't send it to the EMD office yet, so also inform the office, quoting this reference. Use it to track the repair below.`;
       } else {
-        // Nothing is sent: the requester prints the slip and brings it in.
+        // The requester prints the slip and brings it in.
         const unit = unitByOption.get(f.unit.value.trim());
         const plate = unit && unit.plateNo && !/^n\/?a$/i.test(unit.plateNo) ? ` (${unit.plateNo})` : "";
         const params = new URLSearchParams({
@@ -561,9 +787,16 @@
           odoPresent: f.odoPresent.value.trim(), odoPrevious: f.odoPrevious.value.trim(),
           tankBalance: f.tankBalance.value.trim(), purpose: f.details.value.trim()
         });
+        const id = newRequestId("FR");
+        saveRequest({
+          id, kind: "fuel", date: todayISO, status: fuelStatuses[0], unit: f.unit.value.trim(),
+          requestedBy: f.name.value.trim(), office: [f.division.value.trim(), f.office.value.trim()].filter(Boolean).join(", "),
+          details: f.details.value.trim(), fuel: f.fuel.value, litres: f.litres.value,
+          dateFrom: f.dateFrom.value, dateTo: f.dateTo.value, risNo: f.risNo.value.trim()
+        });
         slipLink.href = "fuel-slip.html?" + params;
         slipLink.hidden = false;
-        status.textContent = "Your fuel slip is ready. Print it or save it as a PDF, have it signed, and bring it to the EMD office with your trip ticket.";
+        status.textContent = `Your fuel slip is ready (logged as ${id} in Request monitoring on this computer). Print it or save it as a PDF, have it signed, and bring it to the EMD office with your trip ticket.`;
       }
       status.classList.add("success");
       form.reset();
@@ -575,18 +808,19 @@
   $("#track-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const ref = e.target.elements.ref.value.trim().toUpperCase();
-    const job = [...repairs, ...localRepairs()].find((r) => r.ref.toUpperCase() === ref);
+    const job = allRequests().find((r) => r.kind === "repair" && r.id.toUpperCase() === ref);
     if (!job) {
       trackResult.replaceChildren(el("p", { class: "form-status error", text: `No repair found for "${ref}". Check the reference number, or call the EMD office.` }));
       return;
     }
+    const stage = Math.max(0, stages.indexOf(job.status));
     trackResult.replaceChildren(el("div", { class: "track-card" },
       el("p", { class: "track-head" },
-        el("b", { text: job.ref }),
-        document.createTextNode(` · ${job.unit} · updated ${fmtDate(job.updated)}`)),
+        el("b", { text: job.id }),
+        document.createTextNode(` · ${job.unit} · updated ${fmtDate(job.updated || job.date)}`)),
       el("ol", { class: "stepper" }, stages.map((s, i) => el("li", {
-        class: i < job.stage ? "done" : i === job.stage ? "current" : "",
-        ...(i === job.stage ? { "aria-current": "step" } : {})
+        class: i < stage ? "done" : i === stage ? "current" : "",
+        ...(i === stage ? { "aria-current": "step" } : {})
       }, el("span", { text: s })))),
       job.remarks ? el("p", { class: "track-remarks", text: job.remarks }) : ""));
   });

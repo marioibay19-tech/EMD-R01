@@ -9,8 +9,9 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
 - **PMS schedule**: units due in the next 30 days grouped by month, with overdue / due-soon flags and a "Show all" option
 - **Disaster response readiness**: alert level, emergency hotline, and standby units by type
 - **Requests**: maintenance/repair form, and a fuel requisition form that fills in a printable **Requisition and Issue Slip (Fuel)** (`fuel-slip.html`, Appendix 63, Regional Office I layout) to print or save as PDF, sign and bring to the EMD office
+- **Request monitoring**: fuel requisitions (Pending → Approved → Issued / Disapproved) and maintenance / repair requests (by repair stage), with totals, filters and search
 - **Repair tracker**: look up a repair by reference number and see its stage
-  (request received → pre-repair inspection → job order → repair → post-repair inspection → released)
+  (request received → pre-repair inspection → job order → repair → post-repair inspection → released), from the published monitoring list
 - **Citizen's Charter** (RA 11032): requirements, steps and processing time per service
 - **Forms**: blank fuel slip (printable), trip ticket, inspection reports, job order, PAR, and more
 - **Reports**: operating hours by equipment type and monthly fuel consumption
@@ -34,6 +35,13 @@ python3 -m http.server 8000
 
 Anyone can make edits in their own browser, but only people with write access to this GitHub repository can publish them.
 
+## Updating request monitoring
+1. Requests prepared with the website's repair or fuel form are logged automatically in **Request monitoring** on that computer. For requests received on paper or by phone, click **Add request**.
+2. Click **Edit** on a request to update its status, remarks, liters issued or RIS No.
+3. Click **Download requests.js**, then on GitHub open the `js` folder → **Add file** → **Upload files**, drop in `requests.js` and **Commit changes**. Everyone then sees the updated list, and the repair tracker shows the new stage.
+
+Requests made on another person's computer stay on that computer, so log the paper slip or request at the EMD office. The list is public; contact numbers and emails are not recorded. As with the fleet, have one person publish at a time.
+
 ## Updating the content
 The fleet list is in `js/fleet.js`; everything else lives in `js/data.js`. The fleet list and office location are real; the other sections still hold **sample data**.
 
@@ -45,7 +53,7 @@ Engine serial numbers are deliberately not published: this repository and site a
 | Fuel slip letterhead and signatories (Approved by, Issued by) | `EMD_CONFIG.fuelSlip` |
 | Disaster alert level and message | `EMD_CONFIG.alertLevel` (`"normal"` or `"alert"`), `alertMessage` |
 | Fleet list (and, when available, condition, PMS dates, standby units) | `EMD_FLEET` in `js/fleet.js` (or use **Edit** on the website) |
-| Repairs shown in the tracker | `EMD_REPAIRS` |
+| Request monitoring and repair tracker | `EMD_REQUESTS` in `js/requests.js` (or use **Request monitoring** on the website); statuses in `EMD_FUEL_STATUSES` and `EMD_REPAIR_STAGES` |
 | Citizen's Charter | `EMD_CHARTER` — replace with your approved charter |
 | Downloadable forms | `EMD_FORMS` — put PDFs in `forms/` and set `file` |
 | Report figures | `EMD_REPORTS` |
@@ -58,10 +66,11 @@ To add the DPWH seal, replace the `EMD` text mark in the header (`.brand-mark` i
 `index.html`) with an `<img>`, using the official file approved by your office.
 
 ## Limitations
-There is no backend yet. The fuel requisition form does not send anything: it only prepares the slip for the requester to print. Form submissions are confirmed on the page only; new
-repair requests are remembered in the submitter's own browser so they can be
-tracked there, but they are not sent to the division. Connect the forms to a
-backend or form service to receive submissions.
+There is no backend yet. Neither request form sends anything to the EMD office:
+the fuel form prepares the slip for the requester to print, and both forms only
+log the request in that browser's monitoring list until someone publishes
+`js/requests.js`. Connect the forms to a backend or form service to receive
+submissions automatically.
 
 ## Hosting (GitHub Pages)
 The site is served directly from the repository root. In **Settings → Pages**,

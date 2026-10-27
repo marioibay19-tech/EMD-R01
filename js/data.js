@@ -1,6 +1,6 @@
-// Site content. The fleet list and office location are real; repairs, the
-// Citizen's Charter, reports, announcements, contact numbers and section heads
-// are still SAMPLE data. Replace them, then set sampleData to false to hide
+// Site content. The fleet list and office location are real; the Citizen's
+// Charter, reports, announcements, contact numbers and section heads are
+// still SAMPLE data. Replace them, then set sampleData to false to hide
 // the notice banner.
 
 window.EMD_CONFIG = {
@@ -25,7 +25,8 @@ window.EMD_CONFIG = {
   }
 };
 
-// Repair tracker. stage is an index into EMD_REPAIR_STAGES.
+// Request monitoring statuses. Repairs move through these stages in order;
+// the "Track a repair" box shows them as steps.
 window.EMD_REPAIR_STAGES = [
   "Request received",
   "Pre-repair inspection",
@@ -34,12 +35,7 @@ window.EMD_REPAIR_STAGES = [
   "Post-repair inspection",
   "Released"
 ];
-
-window.EMD_REPAIRS = [
-  { ref: "RR-2026-0142", propertyNo: "EMD-HE-002", unit: "Hino 500 6-wheeler dump truck", stage: 3, updated: "2026-10-22", remarks: "Clutch assembly replacement; parts delivered." },
-  { ref: "RR-2026-0145", propertyNo: "EMD-HE-008", unit: "Dynapac CA250 road roller", stage: 1, updated: "2026-10-24", remarks: "Inspection scheduled; hydraulic leak reported." },
-  { ref: "RR-2026-0139", propertyNo: "EMD-SV-013", unit: "Isuzu Traviz utility truck", stage: 4, updated: "2026-10-25", remarks: "Brake overhaul complete; road test pending." }
-];
+window.EMD_FUEL_STATUSES = ["Pending", "Approved", "Issued", "Disapproved"];
 
 // Downloadable forms. Put PDFs in /forms and set file to e.g. "forms/trip-ticket.pdf".
 // Forms with file: null show "Available at the EMD office" instead of a download link.
