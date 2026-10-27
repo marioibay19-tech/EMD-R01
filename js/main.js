@@ -555,7 +555,7 @@
           name: f.name.value.trim(), designation: f.designation.value.trim(),
           division: f.division.value.trim(), office: f.office.value.trim(),
           propertyNo: unit ? unit.propertyNo : f.unit.value.trim(), forUse: unit ? unit.makeModel + plate : "",
-          fuel: f.fuel.value, litres: f.litres.value, tripTicket: f.tripTicket.value.trim(), risNo: f.risNo.value.trim(),
+          fuel: f.fuel.value, litres: f.litres.value, risNo: f.risNo.value.trim(),
           dateFrom: f.dateFrom.value, dateTo: f.dateTo.value,
           odoPresent: f.odoPresent.value.trim(), odoPrevious: f.odoPrevious.value.trim(),
           tankBalance: f.tankBalance.value.trim(), purpose: f.details.value.trim()
