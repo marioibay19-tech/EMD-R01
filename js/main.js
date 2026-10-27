@@ -552,7 +552,7 @@
         const unit = unitByOption.get(f.unit.value.trim());
         const plate = unit && unit.plateNo && !/^n\/?a$/i.test(unit.plateNo) ? ` (${unit.plateNo})` : "";
         const params = new URLSearchParams({
-          ref, name: f.name.value.trim(), designation: f.designation.value.trim(),
+          name: f.name.value.trim(), designation: f.designation.value.trim(),
           division: f.division.value.trim(), office: f.office.value.trim(),
           propertyNo: unit ? unit.propertyNo : f.unit.value.trim(), forUse: unit ? unit.makeModel + plate : "",
           fuel: f.fuel.value, litres: f.litres.value, tripTicket: f.tripTicket.value.trim(),
@@ -562,7 +562,7 @@
         });
         slipLink.href = "fuel-slip.html?" + params;
         slipLink.hidden = false;
-        status.textContent = `Your fuel slip is ready (reference ${ref}). Print it or save it as a PDF, have it signed, and bring it to the EMD office with your trip ticket.`;
+        status.textContent = "Your fuel slip is ready. Print it or save it as a PDF, have it signed, and bring it to the EMD office with your trip ticket.";
       }
       status.classList.add("success");
       form.reset();

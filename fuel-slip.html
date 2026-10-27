@@ -74,7 +74,6 @@
     .sign .desig { text-align: center; font-size: 8.5pt; line-height: 1.15; }
     .sign .label { white-space: nowrap; }
 
-    .web-ref { margin: 2mm 0 0; font-size: 7.5pt; color: #555; }
 
     @media print {
       body { background: #fff; }
@@ -196,7 +195,6 @@
         <tr><td class="label">Date :</td><td></td><td></td><td></td><td></td></tr>
       </table>
 
-      <p class="web-ref" id="web-ref"></p>
     </div>
   </main>
 
@@ -249,10 +247,6 @@
         name: get("name").toUpperCase(), designation: get("designation")
       };
       Object.keys(values).forEach(function (k) { set('[data-f="' + k + '"]', values[k]); });
-      if (get("ref")) {
-        document.getElementById("web-ref").textContent = "Prepared on the EMD website · Ref. " + get("ref");
-        document.title = "Fuel slip " + get("ref");
-      }
 
       document.getElementById("print").addEventListener("click", function () { window.print(); });
     })();
