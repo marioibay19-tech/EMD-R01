@@ -600,3 +600,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
   /* Scroll sideways rather than clip if a long value widens the table */
   #fleet .table-wrap { overflow-x: auto; }
 }
+
+/* Chip row labels and LTO status line */
+.chips-label { align-self: center; min-width: 40px; color: var(--muted); font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.lto-status { margin-top: 4px; white-space: nowrap; }
+.lto-status .badge, .lto-status .chip { font-size: .72rem; padding: 1px 8px; margin-right: 4px; }

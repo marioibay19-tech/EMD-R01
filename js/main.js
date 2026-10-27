@@ -128,6 +128,36 @@
   const parStatus = (u) => /waiting/i.test(u.parDate) ? "awaiting" : dateKey(u.parDate) ? "with" : "none";
   let parFilter = "";
 
+  // LTO renewal schedule from the plate number: the last digit sets the month
+  // (1 = Jan ... 9 = Sep, 0 = Oct) and the second-to-last digit the week
+  // (1-3: days 1-7, 4-6: 8-14, 7-8: 15-21, 9/0: 22-end). The registration is
+  // taken to be due again in the year after the recorded LTO registration
+  // year. A unit can override this with ltoDue: "YYYY-MM-DD" in data.js
+  // (e.g. a brand-new vehicle with a multi-year first registration).
+  function ltoDue(u) {
+    if (u.ltoDue) return parseDate(u.ltoDue);
+    const year = Number((/(\d{4})$/.exec(u.ltoDate || "") || [])[1]);
+    const plate = (u.plateNo || "").split(/[(/]/)[0];
+    const digits = plate.replace(/\D/g, "");
+    if (!year || digits.length < 2) return null;
+    const last = Number(digits.slice(-1)), prev = Number(digits.slice(-2, -1));
+    const month = last === 0 ? 10 : last;  // 1-based
+    const endDay = prev >= 1 && prev <= 3 ? 7 : prev <= 6 && prev >= 4 ? 14 : prev === 7 || prev === 8 ? 21
+      : new Date(year + 1, month, 0).getDate();  // 9 or 0: last day of the month
+    return new Date(year + 1, month - 1, endDay);
+  }
+  const LTO_DUE_SOON = 30;
+  function ltoStatus(u) {
+    if (!u.plateNo || /^n\/?a$/i.test(u.plateNo)) return { key: "na" };
+    const due = ltoDue(u);
+    if (!due) return { key: "none", label: "No LTO record", cls: "chip" };
+    const days = Math.round((due - today) / 86400000);
+    if (days < 0) return { key: "expired", label: "Expired", cls: "badge badge-unserviceable", due };
+    if (days <= LTO_DUE_SOON) return { key: "due", label: `Due in ${days} day${days === 1 ? "" : "s"}`, cls: "badge badge-under-repair", due };
+    return { key: "valid", label: "Registered", cls: "badge badge-serviceable", due };
+  }
+  let ltoFilter = "";
+
   [...new Set(fleet.map((u) => u.type))].sort().forEach((t) => typeFilter.add(new Option(t, t)));
   offices.forEach((o) => officeFilter.add(new Option(o, o)));
 
@@ -143,7 +173,8 @@
           .some((v) => (v || "").toLowerCase().includes(q))) &&
         (!typeFilter.value || u.type === typeFilter.value) &&
         (!officeFilter.value || officeGroup(u.office) === officeFilter.value) &&
-        (!parFilter || parStatus(u) === parFilter))
+        (!parFilter || parStatus(u) === parFilter) &&
+        (!ltoFilter || ltoStatus(u).key === ltoFilter))
       .sort((a, b) => {
         if (!sortKey) return 0;
         // Blank values always sort last, whichever direction.
@@ -164,7 +195,16 @@
       el("td", { "data-label": "Date of PAR" }, parStatus(u) === "awaiting"
         ? el("span", { class: "badge badge-under-repair", text: "Awaiting updated PAR" })
         : document.createTextNode(dash(u.parDate))),
-      el("td", { "data-label": "LTO registration", text: dash(u.ltoDate) })
+      el("td", { "data-label": "LTO registration" }, ...(() => {
+        const st = ltoStatus(u);
+        if (st.key === "na") return [document.createTextNode(dash(u.ltoDate))];
+        return [
+          el("span", { class: "cell-main", text: dash(u.ltoDate) }),
+          el("small", { class: "lto-status" },
+            el("span", { class: st.cls, text: st.label }),
+            st.due ? document.createTextNode(` ${st.key === "expired" ? "was due" : "due"} ${st.due.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}`) : "")
+        ];
+      })())
     )));
 
     $("#fleet-empty").hidden = rows.length > 0;
@@ -174,6 +214,7 @@
         btn.dataset.sort === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none");
     });
     chipButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.par === parFilter)));
+    ltoChipButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.lto === ltoFilter)));
   }
 
   // PAR status chips filter the table.
@@ -189,7 +230,23 @@
     btn.addEventListener("click", () => { parFilter = key; renderFleet(); });
     return btn;
   });
-  $("#condition-chips").replaceChildren(...chipButtons);
+  $("#condition-chips").replaceChildren(el("span", { class: "chips-label", text: "PAR" }), ...chipButtons);
+
+  // LTO registration status chips.
+  const ltoChipButtons = [
+    ["", "All units", ""],
+    ["expired", "Expired", "badge-unserviceable"],
+    ["due", `Due within ${LTO_DUE_SOON} days`, "badge-under-repair"],
+    ["valid", "Registered", "badge-serviceable"],
+    ["none", "No LTO record", ""]
+  ].map(([key, label, cls]) => {
+    const n = key ? fleet.filter((u) => ltoStatus(u).key === key).length : fleet.length;
+    const btn = el("button", { type: "button", class: `cond-chip ${cls}`.trim(), "data-lto": key },
+      el("span", { text: label }), el("b", { text: String(n) }));
+    btn.addEventListener("click", () => { ltoFilter = key; renderFleet(); });
+    return btn;
+  });
+  $("#lto-chips").replaceChildren(el("span", { class: "chips-label", text: "LTO" }), ...ltoChipButtons);
 
   [search, typeFilter, officeFilter].forEach((node) => node.addEventListener("input", renderFleet));
   document.querySelectorAll("#fleet-table [data-sort]").forEach((btn) => {
