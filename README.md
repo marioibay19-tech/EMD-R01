@@ -3,8 +3,9 @@
 A static, dependency-free web page for the Equipment Management Division (EMD).
 
 ## Sections
-- **Fleet status**: searchable, filterable, sortable list of heavy equipment and service vehicles, with condition and next PMS date
-- **PMS schedule**: units due for preventive maintenance in the next 60 days, with overdue / due-soon flags
+- **Quick actions**: repair request, fuel requisition, repair tracking and the emergency hotline, right below the header
+- **Fleet status**: searchable, sortable list of heavy equipment and service vehicles; condition chips (Serviceable, Under repair, Unserviceable) filter the list
+- **PMS schedule**: units due in the next 30 days grouped by month, with overdue / due-soon flags and a "Show all" option
 - **Disaster response readiness**: alert level, emergency hotline, and standby units by type
 - **Requests**: maintenance/repair and fuel requisition forms
 - **Repair tracker**: look up a repair by reference number and see its stage

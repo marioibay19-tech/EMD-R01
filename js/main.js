@@ -56,7 +56,8 @@
   document.querySelectorAll("[data-config]").forEach((node) => {
     const key = node.dataset.config;
     const value = config[key] || "";
-    node.textContent = value;
+    // data-keep-children: only set the link target, keep the markup inside.
+    if (!node.hasAttribute("data-keep-children")) node.textContent = value;
     if (node.tagName === "A") {
       if (key === "email") node.href = "mailto:" + value;
       else node.href = "tel:" + value.replace(/[^\d+]/g, "");
@@ -126,7 +127,7 @@
     const q = search.value.trim().toLowerCase();
     const rows = fleet
       .filter((u) =>
-        (!q || [u.propertyNo, u.plateNo, u.makeModel, u.assignedTo].some((v) => v.toLowerCase().includes(q))) &&
+        (!q || [u.propertyNo, u.plateNo, u.type, u.makeModel, u.assignedTo].some((v) => v.toLowerCase().includes(q))) &&
         (!typeFilter.value || u.type === typeFilter.value) &&
         (!conditionFilter.value || u.condition === conditionFilter.value))
       .sort((a, b) => (a[sortKey] || "~").localeCompare(b[sortKey] || "~") * sortDir);
@@ -142,7 +143,18 @@
       btn.closest("th").setAttribute("aria-sort",
         btn.dataset.sort === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none");
     });
+    chipButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.condition === conditionFilter.value)));
   }
+
+  // Condition summary chips double as filters, kept in sync with the select.
+  const chipButtons = ["", "Serviceable", "Under repair", "Unserviceable"].map((c) => {
+    const btn = el("button", { type: "button", class: "cond-chip" + (c ? " " + conditionClass(c).split(" ")[1] : ""), "data-condition": c },
+      el("span", { text: c || "All units" }),
+      el("b", { text: String(c ? count(c) : fleet.length) }));
+    btn.addEventListener("click", () => { conditionFilter.value = c; renderFleet(); });
+    return btn;
+  });
+  $("#condition-chips").replaceChildren(...chipButtons);
 
   [search, typeFilter, conditionFilter].forEach((node) => node.addEventListener("input", renderFleet));
   document.querySelectorAll("#fleet-table [data-sort]").forEach((btn) => {
@@ -156,11 +168,17 @@
   renderFleet();
 
   // --- PMS schedule ------------------------------------------------------
-  const pms = fleet
-    .filter((u) => u.nextPms && daysFromToday(u.nextPms) <= 60)
+  // Shows the next 30 days by default (overdue units always included),
+  // grouped by month; "Show all" extends it to every scheduled unit.
+  const PMS_WINDOW = 30;
+  const pmsAll = fleet
+    .filter((u) => u.nextPms)
     .sort((a, b) => a.nextPms.localeCompare(b.nextPms));
+  const pmsSoon = pmsAll.filter((u) => daysFromToday(u.nextPms) <= PMS_WINDOW);
+  const pmsMore = $("#pms-more");
+  let pmsExpanded = false;
 
-  $("#pms-list").replaceChildren(...pms.map((u) => {
+  function pmsItem(u) {
     const days = daysFromToday(u.nextPms);
     const d = parseDate(u.nextPms);
     let status = ["Scheduled", "chip"];
@@ -168,14 +186,33 @@
     else if (days <= 7) status = [days === 0 ? "Due today" : `Due in ${days} day${days === 1 ? "" : "s"}`, "chip chip-warning"];
     return el("li", { class: "pms-item" },
       el("time", { class: "pms-date", datetime: u.nextPms },
-        el("span", { text: d.toLocaleDateString("en-PH", { month: "short" }) }),
+        el("span", { text: d.toLocaleDateString("en-PH", { weekday: "short" }) }),
         el("b", { text: String(d.getDate()) })),
       el("div", { class: "pms-body" },
-        el("p", { class: "pms-unit", text: `${u.makeModel}` }),
-        el("p", { class: "pms-meta", text: `${u.propertyNo} · ${u.pmsType} · ${u.assignedTo}` })),
+        el("p", { class: "pms-unit", text: u.makeModel }),
+        el("p", { class: "pms-meta", text: `${u.propertyNo} · ${u.pmsType}` }),
+        el("p", { class: "pms-meta", text: u.assignedTo })),
       el("span", { class: status[1], text: status[0] }));
-  }));
-  $("#pms-empty").hidden = pms.length > 0;
+  }
+
+  function renderPms() {
+    const list = pmsExpanded ? pmsAll : pmsSoon;
+    const months = list.reduce((acc, u) => {
+      const key = u.nextPms.slice(0, 7);
+      (acc[key] = acc[key] || []).push(u);
+      return acc;
+    }, {});
+    $("#pms-list").replaceChildren(...Object.entries(months).map(([key, units]) => el("section", { class: "pms-month" },
+      el("h3", {},
+        document.createTextNode(parseDate(key + "-01").toLocaleDateString("en-PH", { month: "long", year: "numeric" })),
+        el("span", { text: `${units.length} unit${units.length === 1 ? "" : "s"}` })),
+      el("ol", { class: "pms-list" }, units.map(pmsItem)))));
+    $("#pms-empty").hidden = list.length > 0;
+    pmsMore.hidden = pmsAll.length === pmsSoon.length;
+    pmsMore.textContent = pmsExpanded ? `Show next ${PMS_WINDOW} days only` : `Show all scheduled PMS (${pmsAll.length})`;
+  }
+  pmsMore.addEventListener("click", () => { pmsExpanded = !pmsExpanded; renderPms(); });
+  renderPms();
 
   // --- Disaster readiness ------------------------------------------------
   const alertOn = config.alertLevel === "alert";
@@ -214,6 +251,27 @@
       next.focus();
     });
   });
+  // Quick actions and footer links that open a specific request form.
+  document.querySelectorAll("[data-open-tab]").forEach((link) => {
+    link.addEventListener("click", () => selectTab(document.getElementById(link.dataset.openTab)));
+  });
+
+  // --- Scroll helpers ----------------------------------------------------
+  // Highlight the nav link for the section at the middle of the screen.
+  const navLinks = [...nav.querySelectorAll('a[href^="#"]')];
+  const spyTargets = navLinks.map((a) => document.querySelector(a.getAttribute("href")));
+  const toTop = $("#to-top");
+  const onScroll = () => {
+    toTop.hidden = window.scrollY < 700;
+    const mid = window.innerHeight / 2;
+    const current = spyTargets.find((t) => {
+      const r = t && t.getBoundingClientRect();
+      return r && r.top <= mid && r.bottom > mid;
+    });
+    navLinks.forEach((a, i) => a.classList.toggle("active", spyTargets[i] === current));
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 
   // --- Request forms -----------------------------------------------------
   // No backend yet: submissions are confirmed on the page, and repair

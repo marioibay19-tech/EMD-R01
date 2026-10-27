@@ -53,8 +53,8 @@
           <h1>Keeping public works equipment ready for the road.</h1>
           <p class="lead">The Equipment Management Division manages the heavy equipment and service vehicles used on public works projects, from assignment and preventive maintenance to repair, fuel supply and disposal.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#request">Submit a request</a>
-            <a class="btn btn-ghost" href="#track">Track a repair</a>
+            <a class="btn btn-accent" href="#request">Submit a request</a>
+            <a class="btn btn-outline-light" href="#fleet">View fleet status</a>
           </div>
         </div>
         <dl class="stats" aria-label="Fleet at a glance">
@@ -66,9 +66,27 @@
       </div>
     </section>
 
+    <div class="container quick-actions-wrap">
+      <ul class="quick-actions" aria-label="Quick actions">
+        <li><a href="#request" data-open-tab="tab-repair">
+          <span class="qa-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5Z"/></svg></span>
+          <span><b>Repair request</b><small>Report a breakdown</small></span></a></li>
+        <li><a href="#request" data-open-tab="tab-fuel">
+          <span class="qa-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M14 9h2l2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h5"/></svg></span>
+          <span><b>Fuel requisition</b><small>With an approved trip ticket</small></span></a></li>
+        <li><a href="#track">
+          <span class="qa-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg></span>
+          <span><b>Track a repair</b><small>Using your reference no.</small></span></a></li>
+        <li><a class="qa-urgent" data-config="hotline" data-keep-children>
+          <span class="qa-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></span>
+          <span><b>Emergency hotline</b><small data-config="hotline"></small></span></a></li>
+      </ul>
+    </div>
+
     <section class="section" id="services">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">Services</p>
           <h2>What we do</h2>
           <p>Support across the full life of every unit in the fleet.</p>
         </header>
@@ -110,14 +128,17 @@
     <section class="section section-alt" id="fleet">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">Fleet</p>
           <h2>Fleet status</h2>
           <p>Every unit, where it's assigned, and whether it's serviceable.</p>
         </header>
 
+        <div class="condition-chips" id="condition-chips" role="group" aria-label="Filter by condition"></div>
+
         <div class="toolbar">
           <label class="field field-grow">
             <span class="sr-only">Search fleet</span>
-            <input id="fleet-search" type="search" placeholder="Search property no., plate no., model or assignment…" autocomplete="off">
+            <input id="fleet-search" type="search" placeholder="Search property no., plate no., type, model or assignment…" autocomplete="off">
           </label>
           <label class="field">
             <span class="sr-only">Equipment type</span>
@@ -158,17 +179,20 @@
     <section class="section" id="pms">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">Maintenance</p>
           <h2>Preventive maintenance schedule</h2>
-          <p>Upcoming PMS for the next 60 days. Bring units to the motor pool on the scheduled date.</p>
+          <p>Units due for preventive maintenance in the next 30 days. Bring them to the motor pool on the scheduled date.</p>
         </header>
-        <ol class="pms-list" id="pms-list"></ol>
-        <p id="pms-empty" class="empty" hidden>No PMS scheduled in the next 60 days.</p>
+        <div class="pms-groups" id="pms-list"></div>
+        <p id="pms-empty" class="empty" hidden>No PMS scheduled in the next 30 days.</p>
+        <button class="btn btn-ghost pms-more" id="pms-more" type="button" hidden></button>
       </div>
     </section>
 
     <section class="section section-alt" id="readiness">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">Emergency</p>
           <h2>Disaster response readiness</h2>
           <p>Equipment on standby for road clearing and emergency operations.</p>
         </header>
@@ -190,7 +214,8 @@
       <div class="container request-grid">
         <div>
           <header class="section-head section-head-left">
-            <h2>Submit a request</h2>
+            <p class="kicker">Online services</p>
+          <h2>Submit a request</h2>
             <p>Request maintenance or repair, or requisition fuel. We respond within one business day.</p>
           </header>
           <ol class="steps">
@@ -279,6 +304,7 @@
     <section class="section section-alt" id="charter">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">Transparency</p>
           <h2>Citizen's Charter</h2>
           <p>Requirements, steps, and processing times for each service, as required under RA 11032.</p>
         </header>
@@ -290,6 +316,7 @@
     <section class="section" id="forms">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">Downloads</p>
           <h2>Forms</h2>
           <p>Print and fill these out before you come to the office.</p>
         </header>
@@ -300,6 +327,7 @@
     <section class="section section-alt" id="reports">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">Performance</p>
           <h2>Reports</h2>
           <p>Equipment use and fuel consumption across the division.</p>
         </header>
@@ -327,6 +355,7 @@
     <section class="section" id="announcements">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">News</p>
           <h2>Announcements</h2>
           <p>Schedules, advisories and policy updates from the division.</p>
         </header>
@@ -337,6 +366,7 @@
     <section class="section section-alt" id="about">
       <div class="container">
         <header class="section-head">
+          <p class="kicker">About us</p>
           <h2>Organization</h2>
           <p>Who runs the division, and the offices we serve.</p>
         </header>
@@ -348,13 +378,23 @@
       </div>
     </section>
 
-    <section class="section" id="contact">
-      <div class="container contact-grid">
-        <div>
-          <h2>Contact us</h2>
-          <p>Visit, call, or email the division during office hours. For emergencies, use the hotline at any time.</p>
-        </div>
-        <ul class="contact-list">
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <span class="brand-mark" aria-hidden="true">EMD</span>
+          <span class="brand-text">
+            <span class="brand-agency" data-config="agency"></span>
+            <span class="brand-office" data-config="office"></span>
+          </span>
+        </a>
+        <p>Keeping public works equipment serviceable, fuelled and ready for deployment.</p>
+      </div>
+      <div>
+        <h2>Contact us</h2>
+        <ul class="footer-list">
           <li><span>Office</span><b data-config="address"></b></li>
           <li><span>Hours</span><b data-config="hours"></b></li>
           <li><span>Phone</span><a data-config="phone"></a></li>
@@ -362,15 +402,37 @@
           <li><span>Email</span><a data-config="email"></a></li>
         </ul>
       </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <p>&copy; <span id="year"></span> <span data-config="office"></span>, <span data-config="agency"></span></p>
-      <a href="#top">Back to top ↑</a>
+      <div>
+        <h2>Services</h2>
+        <ul class="footer-links">
+          <li><a href="#request" data-open-tab="tab-repair">Repair request</a></li>
+          <li><a href="#request" data-open-tab="tab-fuel">Fuel requisition</a></li>
+          <li><a href="#track">Track a repair</a></li>
+          <li><a href="#readiness">Emergency deployment</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Information</h2>
+        <ul class="footer-links">
+          <li><a href="#charter">Citizen's Charter</a></li>
+          <li><a href="#forms">Forms</a></li>
+          <li><a href="#reports">Reports</a></li>
+          <li><a href="#announcements">Announcements</a></li>
+          <li><a href="#about">Organization</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container footer-inner">
+        <p>&copy; <span id="year"></span> <span data-config="office"></span>, <span data-config="agency"></span></p>
+        <a href="#top">Back to top ↑</a>
+      </div>
     </div>
   </footer>
+
+  <a class="to-top" id="to-top" href="#top" aria-label="Back to top" hidden>
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
 
   <div class="chart-tooltip" id="chart-tooltip" role="presentation" hidden></div>
 
