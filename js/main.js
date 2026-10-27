@@ -530,7 +530,7 @@
   // uploads it to GitHub; changes the published list already has are cleared.
   const REQ_KEY = "emd-request-edits";
   const REQ_FIELDS = ["id", "kind", "date", "requestedBy", "office", "unit", "details", "fuel", "litres",
-    "dateFrom", "dateTo", "risNo", "issuedLitres", "status", "updated", "remarks"];
+    "dateFrom", "dateTo", "risNo", "issuedLitres", "maintType", "reading", "status", "updated", "remarks"];
   const publishedReqs = window.EMD_REQUESTS || [];
   const localISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const todayISO = localISO(today);
@@ -605,7 +605,7 @@
         ? [r.fuel, r.litres ? `${r.litres} L requested` : "", r.issuedLitres ? `${r.issuedLitres} L issued` : "",
            r.dateFrom ? (r.dateTo && r.dateTo !== r.dateFrom ? `${shortDate(r.dateFrom)}–${shortDate(r.dateTo)}` : shortDate(r.dateFrom)) : "",
            r.risNo ? `RIS ${r.risNo}` : ""].filter(Boolean).join(" · ")
-        : "";
+        : [r.maintType ? `${r.maintType} maintenance` : "", r.reading ? `Reading ${r.reading}` : ""].filter(Boolean).join(" · ");
       const editBtn = el("button", { type: "button", class: "edit-btn", "aria-label": `Edit ${r.id}` }, "Edit");
       editBtn.addEventListener("click", () => openReqDialog(r));
       return el("tr", {},
@@ -738,7 +738,8 @@
       "// This file is public: contact numbers and emails are not recorded.",
       "// Fields: id, kind (\"fuel\" | \"repair\"), date (YYYY-MM-DD), requestedBy, office,",
       "// unit, details, status, updated (YYYY-MM-DD), remarks; fuel also has fuel,",
-      "// litres, dateFrom, dateTo, risNo, issuedLitres."
+      "// litres, dateFrom, dateTo, risNo, issuedLitres; repairs also have",
+      "// maintType (Preventive | Corrective | Express) and reading."
     ].join("\n");
     const list = allRequests().map((r) => "  " + JSON.stringify(cleanReq(r)));
     const blob = new Blob([`${header}\nwindow.EMD_REQUESTS = [\n${list.join(",\n")}${list.length ? "\n" : ""}];\n`], { type: "text/javascript" });
@@ -776,14 +777,25 @@
       }
 
       if (form.dataset.prefix === "RR") {
+        // Log it, then open the printable maintenance request form.
         const id = newRequestId("RR");
-        const extra = [`Location: ${f.location.value.trim()}`, `Reading: ${f.reading.value.trim()}`,
-          `Can operate: ${f.operable.value}`].join("; ");
+        const unit = unitByOption.get(f.unit.value.trim());
         saveRequest({
           id, kind: "repair", date: todayISO, status: stages[0], unit: f.unit.value.trim(),
-          requestedBy: f.name.value.trim(), office: f.office.value.trim(), details: `${f.details.value.trim()} (${extra})`
+          requestedBy: f.name.value.trim(), office: f.office.value.trim(), details: f.details.value.trim(),
+          maintType: f.maintType.value, reading: f.reading.value.trim()
         });
-        status.textContent = `Repair request logged as ${id} in Request monitoring on this computer. The website doesn't send it to the EMD office yet, so also inform the office, quoting this reference. Use it to track the repair below.`;
+        const params = new URLSearchParams({
+          requestNo: id, date: todayISO, name: f.name.value.trim(), office: f.office.value.trim(),
+          section: f.section.value.trim(), makeModel: unit ? unit.makeModel : "",
+          dpcn: unit ? unit.propertyNo : f.unit.value.trim(),
+          plate: unit && unit.plateNo && !/^n\/?a$/i.test(unit.plateNo) ? unit.plateNo : "",
+          reading: f.reading.value.trim(), type: f.maintType.value, details: f.details.value.trim(),
+          notedBy: f.notedBy.value.trim()
+        });
+        slipLink.href = "repair-form.html?" + params;
+        slipLink.hidden = false;
+        status.textContent = `Your request form is ready (Request No. ${id}, also logged in Request monitoring on this computer). Print it or save it as a PDF, sign it, have your division chief note it, and bring it to the EMD office. Use the request no. to track the repair below.`;
       } else {
         // The requester prints the slip and brings it in.
         const unit = unitByOption.get(f.unit.value.trim());

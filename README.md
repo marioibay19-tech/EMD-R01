@@ -8,11 +8,11 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
   the last digit sets the month (1 = Jan … 9 = Sep, 0 = Oct), the second-to-last digit the week (1–3: days 1–7, 4–6: 8–14, 7–8: 15–21, 9/0: 22–end), and the year is the one after the recorded LTO registration. Set `ltoDue: "YYYY-MM-DD"` on a unit in `js/fleet.js` (or the override field in **Edit**) to override it, e.g. for a brand-new vehicle with a multi-year first registration
 - **PMS schedule**: units due in the next 30 days grouped by month, with overdue / due-soon flags and a "Show all" option
 - **Disaster response readiness**: alert level, emergency hotline, and standby units by type
-- **Requests**: maintenance/repair form, and a fuel requisition form that fills in a printable **Requisition and Issue Slip (Fuel)** (`fuel-slip.html`, Appendix 63, Regional Office I layout) to print or save as PDF, sign and bring to the EMD office
+- **Requests**: maintenance/repair form that fills in a printable **Equipment and Service Vehicle Maintenance Request Form** (`repair-form.html`, Regional Office I layout, with the request no. used for tracking), and a fuel requisition form that fills in a printable **Requisition and Issue Slip (Fuel)** (`fuel-slip.html`, Appendix 63, Regional Office I layout) to print or save as PDF, sign and bring to the EMD office
 - **Request monitoring**: fuel requisitions (Pending → Approved → Issued / Disapproved) and maintenance / repair requests (by repair stage), with totals, filters and search
 - **Repair tracker**: look up a repair by reference number and see its stage
   (request received → pre-repair inspection → job order → repair → post-repair inspection → released), from the published monitoring list
-- **Forms**: blank fuel slip (printable), trip ticket, inspection reports, job order, PAR, and more
+- **Forms**: blank maintenance request form and fuel slip (printable), trip ticket, inspection reports, job order, PAR, and more
 - **Reports**: operating hours by equipment type and monthly fuel consumption
 - **Announcements**, **Organization** (division chief, sections, offices served) and **Contact**
 
@@ -57,6 +57,7 @@ Engine serial numbers are deliberately not published: this repository and site a
 |---|---|
 | Office name, address, phone, hotline, email | `EMD_CONFIG` |
 | Fuel slip letterhead and signatories (Approved by, Issued by) | `EMD_CONFIG.fuelSlip` |
+| Maintenance request form letterhead and EMD approver | `EMD_CONFIG.repairForm` |
 | Disaster alert level and message | `EMD_CONFIG.alertLevel` (`"normal"` or `"alert"`), `alertMessage` |
 | Fleet list (and, when available, condition, PMS dates, standby units) | `EMD_FLEET` in `js/fleet.js` (or use **Edit** on the website) |
 | Request monitoring and repair tracker | `EMD_REQUESTS` in `js/requests.js` (or use **Request monitoring** on the website); statuses in `EMD_FUEL_STATUSES` and `EMD_REPAIR_STAGES` |

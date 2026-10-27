@@ -246,26 +246,28 @@
           </div>
 
           <form id="form-repair" class="form request-form" role="tabpanel" aria-labelledby="tab-repair" data-prefix="RR" novalidate>
+            <p class="form-intro">Fill this in to print an <b>Equipment and Service Vehicle Maintenance Request Form</b>. Sign it, have your division chief note it, and bring it to the EMD office.</p>
             <div class="form-row">
-              <label class="field"><span>Requested by</span><input name="name" required autocomplete="name"></label>
-              <label class="field"><span>Office / project</span><input name="office" required></label>
+              <label class="field"><span>Requested by (end user)</span><input name="name" required autocomplete="name"></label>
+              <label class="field"><span>Contact no. or email <em>(optional)</em></span><input name="contact"></label>
             </div>
             <div class="form-row">
-              <label class="field"><span>Contact no. or email</span><input name="contact" required></label>
-              <label class="field"><span>Property / plate no.</span><input name="unit" list="unit-list" required></label>
+              <label class="field"><span>Division / office</span><input name="office" required placeholder="e.g. Construction Division, Regional Office"></label>
+              <label class="field"><span>Section <em>(optional)</em></span><input name="section"></label>
             </div>
-            <div class="form-row">
-              <label class="field"><span>Odometer / hour-meter reading</span><input name="reading" inputmode="numeric" required placeholder="e.g. 12,450 km or 3,210 hrs"></label>
-              <label class="field"><span>Current location of unit</span><input name="location" required placeholder="Project site, motor pool…"></label>
-            </div>
+            <label class="field"><span>Property / plate no.</span><input name="unit" list="unit-list" required placeholder="Start typing the property or plate no."></label>
+            <label class="field"><span>Odometer / hour meter reading</span><input name="reading" inputmode="numeric" required placeholder="e.g. 12,450 km or 3,210 hrs"></label>
             <fieldset class="field radio-group">
-              <legend>Can the unit still operate?</legend>
-              <label><input type="radio" name="operable" value="Yes" required> Yes</label>
-              <label><input type="radio" name="operable" value="No"> No, it needs to be towed or serviced on site</label>
+              <legend>Type of maintenance</legend>
+              <label><input type="radio" name="maintType" value="Preventive" required> Preventive maintenance</label>
+              <label><input type="radio" name="maintType" value="Corrective"> Corrective maintenance</label>
+              <label><input type="radio" name="maintType" value="Express"> Express maintenance</label>
             </fieldset>
-            <label class="field"><span>Description of the problem</span><textarea name="details" rows="4" required placeholder="What happened, when it started, any warning signs…"></textarea></label>
-            <button class="btn btn-primary" type="submit">Send repair request</button>
+            <label class="field"><span>Nature of maintenance / brief description of defect or problem</span><textarea name="details" rows="4" required placeholder="What needs to be done, or what is wrong and when it started"></textarea></label>
+            <label class="field"><span>Noted by (division chief) <em>(optional)</em></span><input name="notedBy" placeholder="Name of your division chief"></label>
+            <button class="btn btn-primary" type="submit">Prepare request form</button>
             <p class="form-status" role="status" aria-live="polite"></p>
+            <a class="btn btn-ghost slip-print" target="_blank" rel="noopener" hidden>Print / Save as PDF</a>
           </form>
 
           <form id="form-fuel" class="form request-form" role="tabpanel" aria-labelledby="tab-fuel" data-prefix="FR" novalidate hidden>

@@ -21,6 +21,11 @@ window.EMD_CONFIG = {
     entity: "Department of Public Works and Highways",
     approvedBy: { name: "ATTY. MARY ROSE N. MILO", designation: "Chief, Administrative Division" },
     issuedBy: { name: "LEILA L. COLLADO", designation: "Chief, SPMS" }
+  },
+  // Equipment and Service Vehicle Maintenance Request Form, Regional Office I.
+  repairForm: {
+    header: ["Republic of the Philippines", "DEPARTMENT OF PUBLIC WORKS AND HIGHWAYS", "REGIONAL OFFICE I", "Aguila Road, Sevilla, San Fernando City, La Union"],
+    emdApprover: { name: "RACHELLE G. LOMAGUE", designation: "Chief, Equipment Management Division" }
   }
 };
 
@@ -40,6 +45,7 @@ window.EMD_FUEL_STATUSES = ["Pending", "Approved", "Issued", "Disapproved"];
 // Forms with file: null show "Available at the EMD office" instead of a download link.
 window.EMD_FORMS = [
   { title: "Driver's trip ticket", description: "Required for every official trip of a government vehicle or equipment.", file: null },
+  { title: "Equipment and service vehicle maintenance request form", description: "Blank form to print and fill in by hand. To print one already filled in, use the maintenance / repair form above.", file: "repair-form.html" },
   { title: "Requisition and issue slip (fuel)", description: "Blank fuel slip to print and fill in by hand. To print one already filled in, use the fuel requisition form above.", file: "fuel-slip.html" },
   { title: "Pre-repair inspection report", description: "Findings and cost estimate before a repair is approved.", file: null },
   { title: "Job order", description: "Authorizes the repair work and the parts to be used.", file: null },

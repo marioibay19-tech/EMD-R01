@@ -4,6 +4,7 @@
 // This file is public: contact numbers and emails are not recorded.
 // Fields: id, kind ("fuel" | "repair"), date (YYYY-MM-DD), requestedBy, office,
 // unit, details, status, updated (YYYY-MM-DD), remarks; fuel also has fuel,
-// litres, dateFrom, dateTo, risNo, issuedLitres.
+// litres, dateFrom, dateTo, risNo, issuedLitres; repairs also have
+// maintType (Preventive | Corrective | Express) and reading.
 window.EMD_REQUESTS = [
 ];

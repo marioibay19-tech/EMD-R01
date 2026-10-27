@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d2d57">
+  <link rel="icon" href="img/icon-192.png">
+  <title>Equipment and Service Vehicle Maintenance Request Form</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm 28mm 12mm 28mm; }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: #e9ecf0; color: #000;
+      font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* Screen-only toolbar */
+    .toolbar {
+      position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+      padding: 12px 16px; background: #0d2d57; color: #fff; font-size: 14px;
+    }
+    .toolbar button, .toolbar a {
+      font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; text-decoration: none;
+    }
+    .toolbar button { border: 0; background: #e08a1e; color: #1b1206; }
+    .toolbar a { border: 1px solid rgba(255, 255, 255, .45); color: #fff; }
+    .toolbar p { margin: 0; opacity: .85; flex: 1 1 260px; }
+
+    /* The A4 sheet: 154mm content width, like the Word form */
+    .sheet { width: 210mm; min-height: 297mm; margin: 16px auto; padding: 12mm 28mm; background: #fff; box-shadow: 0 2px 12px rgba(0, 0, 0, .15); }
+    @media (max-width: 760px) { .sheet { margin: 8px auto; } }
+
+    .letterhead { display: grid; grid-template-columns: 24mm 1fr 24mm; align-items: center; gap: 2mm; }
+    .letterhead img { width: 21mm; height: auto; }
+    .letterhead img.right { justify-self: end; }
+    .letterhead div { text-align: center; line-height: 1.3; }
+    .letterhead p { margin: 0; }
+    .lh-small { font-size: 7.5pt; }
+    .lh-agency { font-size: 10.5pt; }
+    .lh-ro { font-size: 10pt; font-weight: 700; }
+    h1 { margin: 8mm 0 4mm; text-align: center; font-size: 10pt; }
+
+    .box { border: 1px solid #000; padding: 1.5mm 2mm 3mm; }
+    .row { display: flex; align-items: flex-end; gap: 2mm; min-height: 7mm; padding-top: 1.5mm; }
+    .row + .row { padding-top: 1mm; }
+    .label { flex: none; max-width: 32mm; line-height: 1.2; }
+    .line { flex: 1; border-bottom: 1px solid #000; min-height: 5mm; padding: 0 1mm; font-weight: 700; line-height: 5mm; }
+    .half { flex: 1; display: flex; align-items: flex-end; gap: 2mm; }
+
+    .section-title { margin: 4mm -2mm 0; padding: .8mm 0; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; text-align: center; font-weight: 700; }
+    .checks { display: flex; flex-wrap: wrap; gap: 1.5mm 6mm; padding-top: 1.5mm; }
+    .cb { display: inline-block; position: relative; width: 3.4mm; height: 3.4mm; border: 1px solid #000; vertical-align: -.5mm; margin-right: 1mm; }
+    .cb.on::after {
+      content: ""; position: absolute; left: .95mm; top: .1mm; width: .9mm; height: 2mm;
+      border: solid #000; border-width: 0 .45mm .45mm 0; transform: rotate(45deg);
+    }
+    .nature { margin-top: 6mm; }
+    .lined {
+      margin: 1mm -2mm 0; padding: 0 2mm; min-height: 12mm; line-height: 6mm; font-weight: 700; white-space: pre-wrap;
+      background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(6mm - 1px), #000 calc(6mm - 1px), #000 6mm);
+    }
+
+    .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 5mm; }
+    .sign-name { margin-top: 8mm; border-bottom: 1px solid #000; min-height: 5mm; text-align: center; font-weight: 700; }
+    .sign-cap { text-align: center; line-height: 1.5; margin-top: 1mm; }
+
+    .emd-note { margin: 5mm 0 1.5mm; font-weight: 700; font-style: italic; }
+    .approver { width: 62mm; margin: 10mm auto 0; text-align: center; }
+    .approver .sign-name { margin-top: 0; }
+    .approver p { margin: .8mm 0 0; }
+
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none; }
+      .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; zoom: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" id="print">Print / Save as PDF</button>
+    <a href="index.html#request">Back to the website</a>
+    <p>In the print window, choose <b>Save as PDF</b> as the printer to keep a copy. Use A4 paper.</p>
+  </div>
+
+  <main class="sheet">
+    <div class="letterhead">
+      <img src="img/dpwh-seal.png" alt="">
+      <div>
+        <p class="lh-small" data-head="0"></p>
+        <p class="lh-agency" data-head="1"></p>
+        <p class="lh-ro" data-head="2"></p>
+        <p class="lh-small" data-head="3"></p>
+      </div>
+      <img class="right" src="img/bagong-pilipinas.jpg" alt="">
+    </div>
+
+    <h1>EQUIPMENT AND SERVICE VEHICLE MAINTENANCE REQUEST FORM</h1>
+
+    <div class="box">
+      <div class="row">
+        <div class="half"><span class="label">DATE:</span><span class="line" data-f="date"></span></div>
+        <div class="half"><span class="label">REQUEST<br>NO.:</span><span class="line" data-f="requestNo"></span></div>
+      </div>
+      <div class="row"><span class="label">DIVISION/OFFICE:</span><span class="line" data-f="office"></span></div>
+      <div class="row"><span class="label">SECTION:</span><span class="line" data-f="section"></span></div>
+      <div class="row"><span class="label">UNIT MAKE AND<br>MODEL:</span><span class="line" data-f="makeModel"></span></div>
+      <div class="row">
+        <div class="half"><span class="label">DPCN:</span><span class="line" data-f="dpcn"></span></div>
+        <div class="half"><span class="label">PLATE NO.:</span><span class="line" data-f="plate"></span></div>
+      </div>
+      <div class="row"><span class="label" style="max-width:none">ODOMETER OR HOURMETER<br>READING:</span><span class="line" data-f="reading"></span></div>
+
+      <div class="section-title">TYPE OF MAINTENANCE</div>
+      <div class="checks">
+        <span><span class="cb" data-type="Preventive"></span>Preventive Maintenance</span>
+        <span><span class="cb" data-type="Corrective"></span>Corrective Maintenance</span>
+        <span><span class="cb" data-type="Express"></span>Express Maintenance</span>
+      </div>
+
+      <div class="nature">NATURE OF MAINTENANCE / BRIEF DESCRIPTION OF DEFECT OR PROBLEM:</div>
+      <div class="lined" data-f="details"></div>
+
+      <div class="signs">
+        <div>
+          <div>Requested By:</div>
+          <div class="sign-name" data-f="name"></div>
+          <div class="sign-cap">Signature Over Printed Name<br>End User</div>
+        </div>
+        <div>
+          <div>Noted By:</div>
+          <div class="sign-name" data-f="notedBy"></div>
+          <div class="sign-cap">Signature Over Printed Name<br>Division Chief</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="emd-note">(TO BE FILLED-UP BY EMD)</p>
+    <div class="box">
+      <div class="row"><span class="label">Date Received:</span><span class="line" style="flex:0 0 60mm"></span></div>
+      <div class="checks" style="justify-content: space-between; padding-top: 3mm;">
+        <span><span class="cb"></span>Approved</span>
+        <span><span class="cb"></span>Disapproved</span>
+        <span><span class="cb"></span>For Inspection</span>
+      </div>
+      <div class="row"><span class="label">Remarks:</span><span class="line"></span></div>
+      <div class="row"><span class="label">Scheduled Date of<br>Maintenance:</span><span class="line"></span></div>
+      <div class="row"><span class="label">Approved By:</span></div>
+      <div class="approver">
+        <div class="sign-name" data-cfg="approverName"></div>
+        <p data-cfg="approverDesignation"></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var cfg = (window.EMD_CONFIG || {}).repairForm || {};
+      var q = new URLSearchParams(location.search);
+      var get = function (k) { return (q.get(k) || "").trim(); };
+      var set = function (sel, text) {
+        document.querySelectorAll(sel).forEach(function (n) { n.textContent = text; });
+      };
+
+      // Fixed parts of the form, from js/data.js
+      (cfg.header || []).forEach(function (line, i) { set('[data-head="' + i + '"]', line); });
+      set('[data-cfg="approverName"]', (cfg.emdApprover || {}).name || "");
+      set('[data-cfg="approverDesignation"]', (cfg.emdApprover || {}).designation || "");
+
+      // Values from the website's maintenance / repair form (blank form if none)
+      var longDate = function (iso) {
+        if (!iso) return "";
+        var p = iso.split("-").map(Number);
+        return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" });
+      };
+      var values = {
+        date: longDate(get("date")), requestNo: get("requestNo"), office: get("office"), section: get("section"),
+        makeModel: get("makeModel"), dpcn: get("dpcn"), plate: get("plate"), reading: get("reading"),
+        details: get("details"), name: get("name").toUpperCase(), notedBy: get("notedBy").toUpperCase()
+      };
+      Object.keys(values).forEach(function (k) { set('[data-f="' + k + '"]', values[k]); });
+      document.querySelectorAll("[data-type]").forEach(function (box) {
+        box.classList.toggle("on", box.dataset.type === get("type"));
+      });
+
+      document.getElementById("print").addEventListener("click", function () { window.print(); });
+
+      // Fit the A4 sheet to the screen width on phones.
+      var sheet = document.querySelector(".sheet");
+      function fit() {
+        sheet.style.zoom = "";
+        var room = document.documentElement.clientWidth - 16;
+        if (sheet.offsetWidth > room) sheet.style.zoom = String(room / sheet.offsetWidth);
+      }
+      fit();
+      window.addEventListener("resize", fit);
+    })();
+  </script>
+</body>
+</html>
