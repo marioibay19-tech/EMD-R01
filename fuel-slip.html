@@ -64,8 +64,13 @@
     .details td:last-child { border-left: 0; }
     .details .label { text-align: right; padding-right: 1mm; white-space: nowrap; }
     .details .first td { border-top: 1px solid #000; padding-top: 2mm; vertical-align: top; }
-    .details .last td { border-bottom: 1px solid #000; padding-bottom: 6mm; }
-    .purpose { min-height: 12mm; }
+    .details .last td { border-bottom: 1px solid #000; padding-bottom: 3mm; }
+    .purpose { min-height: 5mm; padding-bottom: 2mm; }
+    /* Purpose spans the whole box, so it keeps both outer borders */
+    .details tr.first td.purpose-row { border-left: 1px solid #000; border-right: 1px solid #000; padding-left: 3mm; }
+    .purpose-line { display: flex; gap: 2mm; }
+    .purpose-line > span { flex: none; }
+    .nowrap { white-space: nowrap; }
     .u { text-decoration: underline; }
 
     .sign td { height: 7.5mm; font-size: 9.5pt; }
@@ -138,11 +143,10 @@
 
       <table class="details">
         <colgroup>
-          <col style="width:10.5%"><col style="width:24%"><col style="width:33%"><col style="width:20%"><col style="width:12.5%">
+          <col style="width:6%"><col style="width:25%"><col style="width:41%"><col style="width:17%"><col style="width:11%">
         </colgroup>
         <tr class="first">
-          <td class="label">Purpose:</td>
-          <td colspan="4"><div class="purpose" data-f="purpose"></div></td>
+          <td colspan="5" class="purpose-row"><div class="purpose-line"><span>Purpose:</span><div class="purpose" data-f="purpose"></div></div></td>
         </tr>
         <tr>
           <td></td><td class="label">DPWH Property Code Number:</td><td class="fill u" data-f="propertyNo"></td>
@@ -247,6 +251,16 @@
         name: get("name").toUpperCase(), designation: get("designation")
       };
       Object.keys(values).forEach(function (k) { set('[data-f="' + k + '"]', values[k]); });
+      // Keep the plate number in "For use of" on one line: "Model (ABS-6277)"
+      var forUse = document.querySelector('[data-f="forUse"]');
+      var m = /^(.*?)\s*(\([^()]*\))$/.exec(values.forUse);
+      if (m) {
+        var plate = document.createElement("span");
+        plate.className = "nowrap";
+        plate.textContent = m[2];
+        forUse.textContent = m[1] + " ";
+        forUse.appendChild(plate);
+      }
 
       document.getElementById("print").addEventListener("click", function () { window.print(); });
     })();
