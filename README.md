@@ -35,7 +35,7 @@ python3 -m http.server 8000
 
 ## Updating the fleet (LTO registration and other details)
 1. On the website, find the unit in **Fleet status** and click **Edit**.
-2. Change the date of LTO registration (or plate no., PAR date, office, end-user, position). The dialog shows the new LTO status before you save.
+2. Change the date of LTO registration (or plate no., PAR date, office, end-user, position). The dialog shows the new LTO status before you save. Under **Condition and maintenance**, set the unit's condition, next PMS date and PMS type, and whether it is on the disaster standby list: these fill the **PMS schedule** and **Disaster readiness** sections.
 3. Changes are saved **in that browser only**; a yellow bar shows how many units changed.
 4. Click **Download fleet.js**, then on GitHub open the `js` folder → **Add file** → **Upload files**, drop in `fleet.js` and **Commit changes**.
 5. The live site updates in a few minutes for everyone. The browser's saved changes clear themselves once the published list matches.
@@ -43,6 +43,9 @@ python3 -m http.server 8000
 Anyone can make edits in their own browser, but only people with write access to this GitHub repository can publish them.
 
 ## Updating request monitoring
+**Recommended: connect the Google Sheet request log** ([setup steps](google-apps-script/README.md)). Requests from the website then go straight to a Google Sheet, Request monitoring and the repair tracker read it live, and staff update statuses in the sheet or with **Edit** (using the staff key). Nothing needs to be uploaded to GitHub.
+
+Without the sheet (`requestLog` blank in `js/data.js`):
 1. Requests prepared with the website's repair or fuel form are logged automatically in **Request monitoring** on that computer. For requests received on paper or by phone, click **Add request**.
 2. Click **Edit** on a request to update its status, remarks, liters issued or RIS No.
 3. Click **Download requests.js**, then on GitHub open the `js` folder → **Add file** → **Upload files**, drop in `requests.js` and **Commit changes**. Everyone then sees the updated list, and the repair tracker shows the new stage.
@@ -83,11 +86,11 @@ To add the DPWH seal, replace the `EMD` text mark in the header (`.brand-mark` i
 `index.html`) with an `<img>`, using the official file approved by your office.
 
 ## Limitations
-There is no backend yet. Neither request form sends anything to the EMD office:
-the fuel form prepares the slip for the requester to print, and both forms only
-log the request in that browser's monitoring list until someone publishes
-`js/requests.js`. Connect the forms to a backend or form service to receive
-submissions automatically.
+Until the Google Sheet request log is connected, neither request form sends
+anything to the EMD office: both only log the request in that browser's
+monitoring list until someone publishes `js/requests.js`. With the sheet
+connected, requests are received automatically, but the requester still prints,
+signs and brings in the form.
 
 ## Hosting (GitHub Pages)
 The site is served directly from the repository root. In **Settings → Pages**,

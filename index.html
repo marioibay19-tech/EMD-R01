@@ -250,7 +250,7 @@
           </div>
 
           <form id="form-repair" class="form request-form" role="tabpanel" aria-labelledby="tab-repair" data-prefix="RR" novalidate>
-            <p class="form-intro">Fill this in to print an <b>Equipment and Service Vehicle Maintenance Request Form</b>. Sign it, have your division chief note it, and bring it to the EMD office.</p>
+            <p class="form-intro">Fill this in to print an <b>Equipment and Service Vehicle Maintenance Request Form</b>. Sign it, have your division chief note it, and bring it to the EMD office.<span class="live-only" hidden> Your request is also sent to the EMD request log.</span></p>
             <div class="form-row">
               <label class="field"><span>Requested by (end user)</span><input name="name" required autocomplete="name"></label>
               <label class="field"><span>Contact no. or email <em>(optional)</em></span><input name="contact"></label>
@@ -269,13 +269,14 @@
             </fieldset>
             <label class="field"><span>Nature of maintenance / brief description of defect or problem</span><textarea name="details" rows="4" required placeholder="What needs to be done, or what is wrong and when it started"></textarea></label>
             <label class="field"><span>Noted by (division chief) <em>(optional)</em></span><input name="notedBy" placeholder="Name of your division chief"></label>
+            <label class="hp-field" aria-hidden="true">Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
             <button class="btn btn-primary" type="submit">Prepare request form</button>
             <p class="form-status" role="status" aria-live="polite"></p>
             <a class="btn btn-ghost slip-print" target="_blank" rel="noopener" hidden>Print / Save as PDF</a>
           </form>
 
           <form id="form-fuel" class="form request-form" role="tabpanel" aria-labelledby="tab-fuel" data-prefix="FR" novalidate hidden>
-            <p class="form-intro">Fill this in to print a <b>Requisition and Issue Slip (Fuel)</b>. Sign it and bring it to the EMD office with your trip ticket.</p>
+            <p class="form-intro">Fill this in to print a <b>Requisition and Issue Slip (Fuel)</b>. Sign it and bring it to the EMD office with your trip ticket.<span class="live-only" hidden> Your request is also sent to the EMD request log.</span></p>
             <div class="form-row">
               <label class="field"><span>Requested by</span><input name="name" required autocomplete="name"></label>
               <label class="field"><span>Designation</span><input name="designation" required placeholder="e.g. Engineer III"></label>
@@ -316,6 +317,7 @@
               </div>
             </fieldset>
             <label class="field"><span>Purpose</span><textarea name="details" rows="3" required placeholder="Purpose of the trip and destination"></textarea></label>
+            <label class="hp-field" aria-hidden="true">Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
             <button class="btn btn-primary" type="submit">Prepare fuel slip</button>
             <p class="form-status" role="status" aria-live="polite"></p>
             <a class="btn btn-ghost slip-print" id="slip-print" target="_blank" rel="noopener" hidden>Print / Save as PDF</a>
@@ -346,6 +348,11 @@
           <h2>Request monitoring</h2>
           <p>Fuel requisitions and maintenance / repair requests, and where each one stands.</p>
         </header>
+
+        <div class="live-bar" id="req-live" hidden>
+          <p id="req-live-text" aria-live="polite"></p>
+          <button class="btn btn-ghost btn-sm" type="button" id="req-refresh">Refresh</button>
+        </div>
 
         <div class="monitor-stats" id="monitor-stats"></div>
 
@@ -615,6 +622,10 @@
         </div>
       </div>
       <label class="field"><span id="req-details-label">Details</span><textarea name="details" rows="3"></textarea></label>
+      <label class="field" id="req-key-field" hidden><span>Staff key</span>
+        <input name="staffKey" type="password" autocomplete="current-password">
+        <small class="field-hint">Needed to save changes to the EMD request log. Remembered until you close this tab.</small>
+      </label>
       <div class="dialog-actions">
         <button class="btn btn-primary" type="submit">Save</button>
         <button class="btn btn-ghost" type="button" value="cancel">Cancel</button>

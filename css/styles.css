@@ -729,3 +729,14 @@ input:disabled { opacity: .5; }
 .dialog-group { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px 14px; margin: 0; display: grid; gap: 12px; }
 .dialog-group legend { padding: 0 6px; font-size: .9rem; font-weight: 600; }
 .cond-badge { margin-left: 6px; font-size: .72rem; padding: 1px 8px; }
+
+/* Live request log ------------------------------------------------------ */
+.hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.live-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
+  margin-bottom: 16px; padding: 10px 14px; border-radius: var(--radius);
+  background: var(--ok-bg); color: var(--ok); font-size: .9rem;
+}
+.live-bar p { margin: 0; }
+.live-bar.is-error { background: var(--warn-bg); color: var(--warn); }
+.live-bar.is-loading { background: var(--surface-alt); color: var(--muted); }

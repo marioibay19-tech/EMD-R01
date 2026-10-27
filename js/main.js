@@ -549,9 +549,13 @@
   onScroll();
 
   // --- Request monitoring ------------------------------------------------
-  // Published requests come from js/requests.js. New requests and changes
+  // With a request log (EMD_CONFIG.requestLog, a Google Sheet web app), the
+  // list is read from the sheet and changes are saved there. Without one,
+  // published requests come from js/requests.js; new requests and changes
   // are kept in this browser (by id) until someone downloads requests.js and
-  // uploads it to GitHub; changes the published list already has are cleared.
+  // uploads it to GitHub, and changes the published list already has are cleared.
+  const LOG_URL = (config.requestLog || "").trim();
+  let remoteReqs = null;
   const REQ_KEY = "emd-request-edits";
   const REQ_FIELDS = ["id", "kind", "date", "requestedBy", "office", "unit", "details", "fuel", "litres",
     "dateFrom", "dateTo", "risNo", "issuedLitres", "maintType", "reading", "status", "updated", "remarks"];
@@ -568,10 +572,12 @@
   });
   storage.set(REQ_KEY, reqEdits);
 
+  const byNewest = (a, b) => (b.date || "").localeCompare(a.date || "") || b.id.localeCompare(a.id);
   function allRequests() {
+    if (remoteReqs) return [...remoteReqs].sort(byNewest);
     const byId = new Map(publishedReqs.map((r) => [r.id, r]));
     Object.entries(reqEdits).forEach(([id, r]) => { if (r.deleted) byId.delete(id); else byId.set(id, r); });
-    return [...byId.values()].sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.id.localeCompare(a.id));
+    return [...byId.values()].sort(byNewest);
   }
   function newRequestId(prefix) {
     const taken = new Set(allRequests().map((r) => r.id));
@@ -583,6 +589,70 @@
     reqEdits[r.id] = cleanReq({ ...r, updated: todayISO });
     storage.set(REQ_KEY, reqEdits);
     renderRequests();
+  }
+
+  // Live request log ------------------------------------------------------
+  // text/plain keeps the POST a "simple" request, which Apps Script accepts
+  // from another site without a CORS preflight.
+  async function logApi(action, payload) {
+    const res = await fetch(LOG_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action, ...payload })
+    });
+    const data = await res.json();
+    if (!data.ok) throw Object.assign(new Error(data.error || "The request log did not accept the change."), { badKey: data.badKey });
+    return data;
+  }
+
+  const liveBar = $("#req-live");
+  const liveText = $("#req-live-text");
+  let loadedAt = 0;
+  let loading = null;
+  function setLive(state, text) {
+    liveBar.className = "live-bar" + (state ? " is-" + state : "");
+    liveText.textContent = text;
+  }
+
+  function loadLog() {
+    if (!LOG_URL) return Promise.resolve();
+    if (loading) return loading;
+    setLive("loading", remoteReqs ? "Refreshing…" : "Loading the EMD request log…");
+    loading = fetch(LOG_URL + (LOG_URL.includes("?") ? "&" : "?") + "action=list", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.ok) throw new Error(data.error);
+        remoteReqs = (data.requests || []).map(cleanReq);
+        loadedAt = Date.now();
+        const time = new Date().toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" });
+        setLive("", `Live from the EMD request log · updated ${time}`);
+      })
+      .catch(() => {
+        setLive("error", remoteReqs
+          ? "Couldn't refresh the request log. Showing the last list loaded."
+          : "Couldn't reach the EMD request log. Check your connection and try Refresh.");
+      })
+      .finally(() => { loading = null; renderRequests(); });
+    return loading;
+  }
+
+  const KEY_SESSION = "emd-staff-key";
+  const staffKey = {
+    get() { try { return sessionStorage.getItem(KEY_SESSION) || ""; } catch (e) { return ""; } },
+    set(v) { try { sessionStorage.setItem(KEY_SESSION, v); } catch (e) { /* storage unavailable */ } },
+    clear() { try { sessionStorage.removeItem(KEY_SESSION); } catch (e) { /* storage unavailable */ } }
+  };
+
+  if (LOG_URL) {
+    liveBar.hidden = false;
+    document.querySelectorAll(".live-only").forEach((n) => { n.hidden = false; });
+    $("#req-key-field").hidden = false;
+    $("#req-empty").textContent = "No requests in the EMD request log yet.";
+    $("#req-refresh").addEventListener("click", () => loadLog());
+    // Refresh when someone comes back to the page after a while.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && Date.now() - loadedAt > 120000) loadLog();
+    });
   }
 
   const KINDS = { fuel: "Fuel requisition", repair: "Maintenance / repair" };
@@ -667,7 +737,7 @@
       tile("Open repairs", repair.filter(isOpen).length, `${repair.filter((r) => r.status === "Released").length} released`));
 
     const edited = Object.keys(reqEdits).length;
-    $("#req-edit-bar").hidden = edited === 0;
+    $("#req-edit-bar").hidden = edited === 0 || Boolean(LOG_URL);
     $("#req-edit-count").textContent = `${edited} request${edited === 1 ? "" : "s"} added or changed.`;
   }
   [reqSearch, reqStatus].forEach((n) => n.addEventListener("input", renderRequests));
@@ -702,6 +772,7 @@
     $("#req-dialog-title").textContent = r ? `Update ${r.id}` : "Add request";
     $("#req-dialog-sub").textContent = r ? KINDS[r.kind] : "Log a request received on paper or by phone.";
     $("#req-delete").hidden = !r;
+    f.staffKey.value = staffKey.get();
     reqDialog.showModal();
   }
 
@@ -709,7 +780,37 @@
   reqDialog.querySelectorAll('button[value="cancel"]').forEach((b) => b.addEventListener("click", () => reqDialog.close()));
   $("#req-add").addEventListener("click", () => openReqDialog(null));
 
-  reqForm.addEventListener("submit", (e) => {
+  // Saves to the request log with the staff key; returns false on failure.
+  async function saveToLog(action, payload) {
+    const f = reqForm.elements;
+    const status = $("#req-form-status");
+    const key = f.staffKey.value.trim();
+    if (!key) {
+      f.staffKey.classList.add("invalid");
+      f.staffKey.focus();
+      status.textContent = "Enter the staff key to save to the request log.";
+      status.className = "form-status error";
+      return false;
+    }
+    status.textContent = "Saving…";
+    status.className = "form-status";
+    reqForm.querySelectorAll("button").forEach((b) => { b.disabled = true; });
+    try {
+      await logApi(action, { key, ...payload });
+      staffKey.set(key);
+      await loadLog();
+      return true;
+    } catch (err) {
+      if (err.badKey) { staffKey.clear(); f.staffKey.classList.add("invalid"); f.staffKey.select(); }
+      status.textContent = err instanceof TypeError ? "Couldn't reach the request log. Check your connection and try again." : err.message;
+      status.className = "form-status error";
+      return false;
+    } finally {
+      reqForm.querySelectorAll("button").forEach((b) => { b.disabled = false; });
+    }
+  }
+
+  reqForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = reqForm.elements;
     reqForm.querySelectorAll(".invalid").forEach((n) => n.classList.remove("invalid"));
@@ -733,12 +834,21 @@
       Object.assign(record, { fuel: f.fuel.value, litres: f.litres.value, issuedLitres: f.issuedLitres.value,
         risNo: f.risNo.value.trim(), dateFrom: f.dateFrom.value, dateTo: f.dateTo.value });
     }
+    if (LOG_URL) {
+      if (!editingReq) delete record.id;
+      if (await saveToLog(editingReq ? "update" : "add", { request: record })) reqDialog.close();
+      return;
+    }
     saveRequest(record);
     reqDialog.close();
   });
 
-  $("#req-delete").addEventListener("click", () => {
+  $("#req-delete").addEventListener("click", async () => {
     if (!editingReq || !confirm(`Delete ${editingReq.id} from the monitoring list?`)) return;
+    if (LOG_URL) {
+      if (await saveToLog("delete", { id: editingReq.id })) reqDialog.close();
+      return;
+    }
     const published = publishedReqs.some((r) => r.id === editingReq.id);
     if (published) reqEdits[editingReq.id] = { deleted: true }; else delete reqEdits[editingReq.id];
     storage.set(REQ_KEY, reqEdits);
@@ -775,15 +885,40 @@
   });
 
   renderRequests();
+  loadLog();
 
   // --- Request forms -----------------------------------------------------
-  // No backend yet: nothing is sent to the EMD office. Each request is logged
-  // in this browser's Request monitoring list so staff can publish it.
+  // With a request log, each request is sent to the sheet, which gives it its
+  // request no. Without one, nothing is sent to the EMD office: the request is
+  // logged in this browser's Request monitoring list so staff can publish it.
+  // Returns the request no., or "" if the log couldn't be reached.
+  async function logRequest(record, extra, form) {
+    if (!LOG_URL) {
+      const id = newRequestId(record.kind === "fuel" ? "FR" : "RR");
+      saveRequest({ ...record, id });
+      return id;
+    }
+    const button = form.querySelector('button[type="submit"]');
+    const label = button.textContent;
+    button.disabled = true;
+    button.textContent = "Sending…";
+    try {
+      const data = await logApi("submit", { request: { ...record, ...extra }, website: form.elements.website.value });
+      if (remoteReqs && data.request.id) remoteReqs.push(cleanReq(data.request));
+      renderRequests();
+      return data.request.id || "";
+    } catch (err) {
+      return "";
+    } finally {
+      button.disabled = false;
+      button.textContent = label;
+    }
+  }
   document.querySelectorAll(".request-form").forEach((form) => {
     const status = form.querySelector(".form-status");
     const slipLink = form.querySelector(".slip-print");
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       status.className = "form-status";
       form.querySelectorAll(".invalid").forEach((n) => n.classList.remove("invalid"));
@@ -800,15 +935,16 @@
         return;
       }
 
+      let sent = true;
       if (form.dataset.prefix === "RR") {
         // Log it, then open the printable maintenance request form.
-        const id = newRequestId("RR");
         const unit = unitByOption.get(f.unit.value.trim());
-        saveRequest({
-          id, kind: "repair", date: todayISO, status: stages[0], unit: f.unit.value.trim(),
+        status.textContent = LOG_URL ? "Sending your request…" : "";
+        const id = await logRequest({
+          kind: "repair", date: todayISO, status: stages[0], unit: f.unit.value.trim(),
           requestedBy: f.name.value.trim(), office: f.office.value.trim(), details: f.details.value.trim(),
           maintType: f.maintType.value, reading: f.reading.value.trim()
-        });
+        }, { contact: f.contact.value.trim(), section: f.section.value.trim(), notedBy: f.notedBy.value.trim() }, form);
         const params = new URLSearchParams({
           requestNo: id, date: todayISO, name: f.name.value.trim(), office: f.office.value.trim(),
           section: f.section.value.trim(), makeModel: unit ? unit.makeModel : "",
@@ -817,9 +953,14 @@
           reading: f.reading.value.trim(), type: f.maintType.value, details: f.details.value.trim(),
           notedBy: f.notedBy.value.trim()
         });
+        sent = !LOG_URL || Boolean(id);
         slipLink.href = "repair-form.html?" + params;
         slipLink.hidden = false;
-        status.textContent = `Your request form is ready (Request No. ${id}, also logged in Request monitoring on this computer). Print it or save it as a PDF, sign it, have your division chief note it, and bring it to the EMD office. Use the request no. to track the repair below.`;
+        status.textContent = !LOG_URL
+          ? `Your request form is ready (Request No. ${id}, also logged in Request monitoring on this computer). Print it or save it as a PDF, sign it, have your division chief note it, and bring it to the EMD office. Use the request no. to track the repair below.`
+          : id
+          ? `Your request was sent to the EMD office as Request No. ${id}. Print the form or save it as a PDF, sign it, have your division chief note it, and bring it to the EMD office. Use the request no. to track the repair below.`
+          : "Your form is ready, but it couldn't be sent to the EMD request log (no connection?). Print it, sign it and bring it to the EMD office; staff will write in the request no.";
       } else {
         // The requester prints the slip and brings it in.
         const unit = unitByOption.get(f.unit.value.trim());
@@ -834,27 +975,36 @@
           odoPresent: f.odoPresent.value.trim(), odoPrevious: f.odoPrevious.value.trim(),
           tankBalance: f.tankBalance.value.trim(), purpose: f.details.value.trim()
         });
-        const id = newRequestId("FR");
-        saveRequest({
-          id, kind: "fuel", date: todayISO, status: fuelStatuses[0], unit: f.unit.value.trim(),
+        status.textContent = LOG_URL ? "Sending your request…" : "";
+        const id = await logRequest({
+          kind: "fuel", date: todayISO, status: fuelStatuses[0], unit: f.unit.value.trim(),
           requestedBy: f.name.value.trim(), office: [f.division.value.trim(), f.office.value.trim()].filter(Boolean).join(", "),
           details: f.details.value.trim(), fuel: f.fuel.value, litres: f.litres.value,
           dateFrom: f.dateFrom.value, dateTo: f.dateTo.value, risNo: f.risNo.value.trim()
-        });
+        }, { contact: f.contact.value.trim() }, form);
+        sent = !LOG_URL || Boolean(id);
         slipLink.href = "fuel-slip.html?" + params;
         slipLink.hidden = false;
-        status.textContent = `Your fuel slip is ready (logged as ${id} in Request monitoring on this computer). Print it or save it as a PDF, have it signed, and bring it to the EMD office with your trip ticket.`;
+        status.textContent = !LOG_URL
+          ? `Your fuel slip is ready (logged as ${id} in Request monitoring on this computer). Print it or save it as a PDF, have it signed, and bring it to the EMD office with your trip ticket.`
+          : id
+          ? `Your fuel request was sent to the EMD office as ${id}. Print the slip or save it as a PDF, have it signed, and bring it to the EMD office with your trip ticket.`
+          : "Your fuel slip is ready, but the request couldn't be sent to the EMD request log (no connection?). Print it, have it signed and bring it to the EMD office with your trip ticket.";
       }
-      status.classList.add("success");
+      status.classList.add(sent ? "success" : "error");
       form.reset();
     });
   });
 
   // --- Repair tracker ----------------------------------------------------
   const trackResult = $("#track-result");
-  $("#track-form").addEventListener("submit", (e) => {
+  $("#track-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const ref = e.target.elements.ref.value.trim().toUpperCase();
+    if (LOG_URL) {
+      trackResult.replaceChildren(el("p", { class: "form-status", text: "Checking the request log…" }));
+      await loadLog();
+    }
     const job = allRequests().find((r) => r.kind === "repair" && r.id.toUpperCase() === ref);
     if (!job) {
       trackResult.replaceChildren(el("p", { class: "form-status error", text: `No repair found for "${ref}". Check the reference number, or call the EMD office.` }));

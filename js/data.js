@@ -12,6 +12,10 @@ window.EMD_CONFIG = {
   phone: "(000) 000-0000",
   hotline: "(000) 000-0000",
   email: "emd@example.org",
+  // Google Sheet request log (google-apps-script/README.md). Paste the web app
+  // URL here to send requests to the sheet and show it in Request monitoring.
+  // Leave it blank to keep requests in each browser and js/requests.js.
+  requestLog: "",
   // Where the Admin page sends you to upload files.
   github: { repo: "marioibay19-tech/EMD-R01", branch: "claude/admiring-sagan-f7r3nh" },
   // Disaster readiness: "normal" or "alert"
