@@ -4,7 +4,7 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
 
 ## Sections
 - **Quick actions**: repair request, fuel requisition, repair tracking and the emergency hotline, right below the header
-- **Fleet status**: searchable, sortable list of heavy equipment and service vehicles; condition chips (Serviceable, Under repair, Unserviceable) filter the list
+- **Fleet status**: the division's 133 units with plate no., assigned office, end-user, PAR and LTO registration dates; filter by type, office or PAR status (with PAR, awaiting updated PAR, none on record)
 - **PMS schedule**: units due in the next 30 days grouped by month, with overdue / due-soon flags and a "Show all" option
 - **Disaster response readiness**: alert level, emergency hotline, and standby units by type
 - **Requests**: maintenance/repair and fuel requisition forms
@@ -25,13 +25,15 @@ python3 -m http.server 8000
 ```
 
 ## Updating the content
-All content lives in `js/data.js`. **It currently holds sample data.**
+All content lives in `js/data.js`. The fleet list and office location are real; the other sections still hold **sample data**.
+
+Engine serial numbers are deliberately not published: this repository and site are public.
 
 | What | Where in `js/data.js` |
 |---|---|
 | Office name, address, phone, hotline, email | `EMD_CONFIG` |
 | Disaster alert level and message | `EMD_CONFIG.alertLevel` (`"normal"` or `"alert"`), `alertMessage` |
-| Fleet, PMS dates, standby units | `EMD_FLEET` |
+| Fleet list (and, when available, condition, PMS dates, standby units) | `EMD_FLEET` |
 | Repairs shown in the tracker | `EMD_REPAIRS` |
 | Citizen's Charter | `EMD_CHARTER` — replace with your approved charter |
 | Downloadable forms | `EMD_FORMS` — put PDFs in `forms/` and set `file` |

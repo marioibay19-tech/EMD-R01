@@ -14,7 +14,7 @@
   <a class="skip-link" href="#main">Skip to content</a>
 
   <div class="sample-banner" id="sample-banner" hidden>
-    Sample data shown. Replace the contents of <code>js/data.js</code> with your office's records before publishing.
+    Some sections still show sample data (repairs, Citizen's Charter, reports, announcements and contact numbers). Replace them in <code>js/data.js</code> before publishing.
   </div>
 
   <header class="site-header">
@@ -59,9 +59,9 @@
         </div>
         <dl class="stats" aria-label="Fleet at a glance">
           <div class="stat"><dt>Units in fleet</dt><dd id="stat-total">0</dd></div>
-          <div class="stat"><dt>Serviceable</dt><dd id="stat-serviceable">0</dd></div>
-          <div class="stat"><dt>Under repair</dt><dd id="stat-repair">0</dd></div>
-          <div class="stat"><dt>PMS due in 14 days</dt><dd id="stat-pms">0</dd></div>
+          <div class="stat"><dt>Service vehicles</dt><dd id="stat-vehicles">0</dd></div>
+          <div class="stat"><dt>Trucks &amp; equipment</dt><dd id="stat-equipment">0</dd></div>
+          <div class="stat"><dt>Offices served</dt><dd id="stat-offices">0</dd></div>
         </dl>
       </div>
     </section>
@@ -130,28 +130,23 @@
         <header class="section-head">
           <p class="kicker">Fleet</p>
           <h2>Fleet status</h2>
-          <p>Every unit, where it's assigned, and whether it's serviceable.</p>
+          <p>Every unit, the office it's assigned to, its accountable end-user, and its PAR and LTO registration dates.</p>
         </header>
 
-        <div class="condition-chips" id="condition-chips" role="group" aria-label="Filter by condition"></div>
+        <div class="condition-chips" id="condition-chips" role="group" aria-label="Filter by PAR status"></div>
 
         <div class="toolbar">
           <label class="field field-grow">
             <span class="sr-only">Search fleet</span>
-            <input id="fleet-search" type="search" placeholder="Search property no., plate no., type, model or assignment…" autocomplete="off">
+            <input id="fleet-search" type="search" placeholder="Search property no., plate no., model, office or end-user…" autocomplete="off">
           </label>
           <label class="field">
             <span class="sr-only">Equipment type</span>
             <select id="fleet-type"><option value="">All types</option></select>
           </label>
           <label class="field">
-            <span class="sr-only">Condition</span>
-            <select id="fleet-condition">
-              <option value="">All conditions</option>
-              <option>Serviceable</option>
-              <option>Under repair</option>
-              <option>Unserviceable</option>
-            </select>
+            <span class="sr-only">Assigned office</span>
+            <select id="fleet-office"><option value="">All offices</option></select>
           </label>
         </div>
 
@@ -161,11 +156,11 @@
               <tr>
                 <th scope="col"><button data-sort="propertyNo">Property no.</button></th>
                 <th scope="col"><button data-sort="plateNo">Plate no.</button></th>
-                <th scope="col"><button data-sort="type">Type</button></th>
-                <th scope="col"><button data-sort="makeModel">Make / model</button></th>
-                <th scope="col"><button data-sort="assignedTo">Assigned to</button></th>
-                <th scope="col"><button data-sort="nextPms">Next PMS</button></th>
-                <th scope="col"><button data-sort="condition">Condition</button></th>
+                <th scope="col"><button data-sort="makeModel">Equipment</button></th>
+                <th scope="col"><button data-sort="office">Assigned office</button></th>
+                <th scope="col"><button data-sort="endUser">End-user</button></th>
+                <th scope="col"><button data-sort="parDate">Date of PAR</button></th>
+                <th scope="col"><button data-sort="ltoDate">LTO registration</button></th>
               </tr>
             </thead>
             <tbody id="fleet-body"></tbody>
@@ -184,7 +179,7 @@
           <p>Units due for preventive maintenance in the next 30 days. Bring them to the motor pool on the scheduled date.</p>
         </header>
         <div class="pms-groups" id="pms-list"></div>
-        <p id="pms-empty" class="empty" hidden>No PMS scheduled in the next 30 days.</p>
+        <p id="pms-empty" class="empty" hidden>The PMS schedule will be posted here.</p>
         <button class="btn btn-ghost pms-more" id="pms-more" type="button" hidden></button>
       </div>
     </section>
@@ -207,6 +202,7 @@
           </div>
         </div>
         <div class="standby-grid" id="standby-grid"></div>
+        <p id="standby-empty" class="empty" hidden>The list of standby equipment will be posted here.</p>
       </div>
     </section>
 

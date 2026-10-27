@@ -95,46 +95,76 @@
   });
 
   // --- Stats -------------------------------------------------------------
-  const count = (condition) => fleet.filter((u) => u.condition === condition).length;
-  const pmsDue = fleet.filter((u) => u.nextPms && daysFromToday(u.nextPms) <= 14);
+  // "Equipment Management Division (A1-2), Regional Office" -> "Equipment Management Division"
+  const officeGroup = (o) => o ? o.split(",")[0].replace(/\s*\(.*?\)/, "").replace(/\s+-\s+.*/, "").trim() : "Unassigned";
+  const offices = [...new Set(fleet.map((u) => officeGroup(u.office)))].filter((o) => o !== "Unassigned").sort();
   $("#stat-total").textContent = fleet.length;
-  $("#stat-serviceable").textContent = count("Serviceable");
-  $("#stat-repair").textContent = count("Under repair");
-  $("#stat-pms").textContent = pmsDue.length;
+  $("#stat-vehicles").textContent = fleet.filter((u) => u.group === "vehicle").length;
+  $("#stat-equipment").textContent = fleet.filter((u) => u.group !== "vehicle").length;
+  $("#stat-offices").textContent = offices.length;
 
   // --- Fleet table -------------------------------------------------------
   const search = $("#fleet-search");
   const typeFilter = $("#fleet-type");
-  const conditionFilter = $("#fleet-condition");
+  const officeFilter = $("#fleet-office");
   const fleetBody = $("#fleet-body");
-  const columns = [
-    ["propertyNo", "Property no."],
-    ["plateNo", "Plate no."],
-    ["type", "Type"],
-    ["makeModel", "Make / model"],
-    ["assignedTo", "Assigned to"],
-    ["nextPms", "Next PMS"]
-  ];
-  let sortKey = "propertyNo";
+  const dash = (v) => v || "—";
+  let sortKey = "";  // "" keeps the order of the equipment list
   let sortDir = 1;
+  // "Office, Location" -> office on the first line, location underneath.
+  const splitOffice = (o) => {
+    const i = (o || "").indexOf(",");
+    return i < 0 ? [o, ""] : [o.slice(0, i), o.slice(i + 1).trim()];
+  };
+
+  // Dates are recorded as DD/MM/YYYY; a few were typed MM/DD/YYYY, which is
+  // detectable when the middle number is over 12. Used for sorting only.
+  const dateKey = (s) => {
+    const m = /^(\d\d)\/(\d\d)\/(\d{4})$/.exec(s || "");
+    if (!m) return "";
+    const [d, mo] = Number(m[2]) > 12 ? [m[2], m[1]] : [m[1], m[2]];
+    return `${m[3]}-${mo}-${d}`;
+  };
+  const parStatus = (u) => /waiting/i.test(u.parDate) ? "awaiting" : dateKey(u.parDate) ? "with" : "none";
+  let parFilter = "";
 
   [...new Set(fleet.map((u) => u.type))].sort().forEach((t) => typeFilter.add(new Option(t, t)));
+  offices.forEach((o) => officeFilter.add(new Option(o, o)));
 
   const unitList = $("#unit-list");
-  fleet.forEach((u) => unitList.appendChild(new Option(`${u.propertyNo} — ${u.makeModel}`)));
+  fleet.forEach((u) => unitList.appendChild(new Option(`${u.propertyNo} — ${u.plateNo} ${u.makeModel}`)));
 
   function renderFleet() {
     const q = search.value.trim().toLowerCase();
+    const sortValue = (u) => sortKey === "parDate" || sortKey === "ltoDate" ? dateKey(u[sortKey]) : u[sortKey];
     const rows = fleet
       .filter((u) =>
-        (!q || [u.propertyNo, u.plateNo, u.type, u.makeModel, u.assignedTo].some((v) => v.toLowerCase().includes(q))) &&
+        (!q || [u.propertyNo, u.plateNo, u.type, u.makeModel, u.office, u.endUser, u.position]
+          .some((v) => (v || "").toLowerCase().includes(q))) &&
         (!typeFilter.value || u.type === typeFilter.value) &&
-        (!conditionFilter.value || u.condition === conditionFilter.value))
-      .sort((a, b) => (a[sortKey] || "~").localeCompare(b[sortKey] || "~") * sortDir);
+        (!officeFilter.value || officeGroup(u.office) === officeFilter.value) &&
+        (!parFilter || parStatus(u) === parFilter))
+      .sort((a, b) => {
+        if (!sortKey) return 0;
+        // Blank values always sort last, whichever direction.
+        const va = sortValue(a), vb = sortValue(b);
+        if (!va || !vb) return !va - !vb;
+        return va.localeCompare(vb, "en", { numeric: true }) * sortDir;
+      });
 
     fleetBody.replaceChildren(...rows.map((u) => el("tr", {},
-      columns.map(([key, label]) => el("td", { "data-label": label, text: key === "nextPms" ? fmtDate(u[key]) : u[key] })),
-      el("td", { "data-label": "Condition" }, el("span", { class: conditionClass(u.condition), text: u.condition }))
+      el("td", { "data-label": "Property no.", text: u.propertyNo }),
+      el("td", { "data-label": "Plate no.", text: dash(u.plateNo) }),
+      el("td", { "data-label": "Equipment" }, el("span", { class: "cell-main", text: u.makeModel }), el("small", { text: u.type })),
+      el("td", { "data-label": "Assigned office" }, ...(() => {
+        const [office, place] = splitOffice(u.office);
+        return [el("span", { class: "cell-main", text: dash(office) }), place ? el("small", { text: place }) : ""];
+      })()),
+      el("td", { "data-label": "End-user" }, el("span", { class: "cell-main", text: dash(u.endUser) }), u.position ? el("small", { text: u.position }) : ""),
+      el("td", { "data-label": "Date of PAR" }, parStatus(u) === "awaiting"
+        ? el("span", { class: "badge badge-under-repair", text: "Awaiting updated PAR" })
+        : document.createTextNode(dash(u.parDate))),
+      el("td", { "data-label": "LTO registration", text: dash(u.ltoDate) })
     )));
 
     $("#fleet-empty").hidden = rows.length > 0;
@@ -143,20 +173,25 @@
       btn.closest("th").setAttribute("aria-sort",
         btn.dataset.sort === sortKey ? (sortDir === 1 ? "ascending" : "descending") : "none");
     });
-    chipButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.condition === conditionFilter.value)));
+    chipButtons.forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.par === parFilter)));
   }
 
-  // Condition summary chips double as filters, kept in sync with the select.
-  const chipButtons = ["", "Serviceable", "Under repair", "Unserviceable"].map((c) => {
-    const btn = el("button", { type: "button", class: "cond-chip" + (c ? " " + conditionClass(c).split(" ")[1] : ""), "data-condition": c },
-      el("span", { text: c || "All units" }),
-      el("b", { text: String(c ? count(c) : fleet.length) }));
-    btn.addEventListener("click", () => { conditionFilter.value = c; renderFleet(); });
+  // PAR status chips filter the table.
+  const chipButtons = [
+    ["", "All units", ""],
+    ["with", "With PAR", "badge-serviceable"],
+    ["awaiting", "Awaiting updated PAR", "badge-under-repair"],
+    ["none", "No PAR on record", "badge-unserviceable"]
+  ].map(([key, label, cls]) => {
+    const n = key ? fleet.filter((u) => parStatus(u) === key).length : fleet.length;
+    const btn = el("button", { type: "button", class: `cond-chip ${cls}`.trim(), "data-par": key },
+      el("span", { text: label }), el("b", { text: String(n) }));
+    btn.addEventListener("click", () => { parFilter = key; renderFleet(); });
     return btn;
   });
   $("#condition-chips").replaceChildren(...chipButtons);
 
-  [search, typeFilter, conditionFilter].forEach((node) => node.addEventListener("input", renderFleet));
+  [search, typeFilter, officeFilter].forEach((node) => node.addEventListener("input", renderFleet));
   document.querySelectorAll("#fleet-table [data-sort]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const key = btn.dataset.sort;
@@ -191,7 +226,7 @@
       el("div", { class: "pms-body" },
         el("p", { class: "pms-unit", text: u.makeModel }),
         el("p", { class: "pms-meta", text: `${u.propertyNo} · ${u.pmsType}` }),
-        el("p", { class: "pms-meta", text: u.assignedTo })),
+        el("p", { class: "pms-meta", text: dash(u.office) })),
       el("span", { class: status[1], text: status[0] }));
   }
 
@@ -228,9 +263,10 @@
         el("h3", { text: type }),
         el("p", { text: `${ready} of ${units.length} ready` })),
       el("ul", {}, units.map((u) => el("li", {},
-        el("span", { text: `${u.propertyNo} · ${u.assignedTo}` }),
-        el("span", { class: conditionClass(u.condition), text: u.condition })))));
+        el("span", { text: `${u.propertyNo} · ${dash(u.office)}` }),
+        u.condition ? el("span", { class: conditionClass(u.condition), text: u.condition }) : ""))));
   }));
+  $("#standby-empty").hidden = standby.length > 0;
 
   // --- Request tabs ------------------------------------------------------
   const tabs = [...document.querySelectorAll('[role="tab"]')];
