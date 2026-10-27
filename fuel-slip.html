@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Requisition and Issue Slip (Fuel)</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm 8mm; }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: #e9ecf0; color: #000;
+      font-family: Arial, Helvetica, sans-serif; font-size: 10pt;
+    }
+
+    /* Screen-only toolbar */
+    .toolbar {
+      position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+      padding: 12px 16px; background: #0d2d57; color: #fff; font-size: 14px;
+    }
+    .toolbar button, .toolbar a {
+      font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; text-decoration: none;
+    }
+    .toolbar button { border: 0; background: #e08a1e; color: #1b1206; }
+    .toolbar a { border: 1px solid rgba(255, 255, 255, .45); color: #fff; }
+    .toolbar p { margin: 0; opacity: .85; flex: 1 1 260px; }
+
+    /* The A4 sheet */
+    .sheet {
+      width: 194mm; min-height: 273mm; margin: 16px auto; padding: 0;
+      background: #fff; box-shadow: 0 2px 12px rgba(0, 0, 0, .15);
+    }
+    .sheet-inner { padding: 4mm 3mm; }
+    @media (max-width: 760px) {
+      .sheet { width: auto; margin: 8px; overflow-x: auto; }
+      .sheet-inner { min-width: 188mm; }
+    }
+
+    .appendix { text-align: right; font-style: italic; font-size: 9pt; margin: 0 0 2mm; }
+    .letterhead { position: relative; text-align: center; min-height: 26mm; }
+    .letterhead img { position: absolute; left: 4mm; top: 0; width: 26mm; height: 26mm; }
+    .letterhead p { margin: 0; font-size: 9.5pt; line-height: 1.35; }
+    .letterhead .ro { font-weight: 700; }
+    h1 { margin: 4mm 0 5mm; text-align: center; font-size: 12pt; }
+
+    .entity { display: flex; justify-content: space-between; font-weight: 700; padding: 0 0 1mm; }
+    .entity span:last-child { min-width: 52mm; }
+
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    td, th { border: 1px solid #000; padding: 0 1.5mm; height: 6mm; font-weight: 400; vertical-align: middle; }
+    .center { text-align: center; }
+    .fill { font-weight: 700; }
+    .sec th { font-style: italic; font-weight: 700; font-size: 11pt; height: 7mm; }
+    .colhead td { text-align: center; height: 6.5mm; }
+    .meta td { height: 7mm; vertical-align: top; padding-top: 1.5mm; }
+    .meta p { margin: 0 0 1.5mm; }
+    .nothing td { text-align: center; font-weight: 700; font-size: 8pt; }
+    .blank td { height: 5.2mm; }
+
+    /* Purpose and vehicle details: one bordered box, no inner lines */
+    .details td { border-top: 0; border-bottom: 0; height: auto; padding-top: .6mm; padding-bottom: .6mm; font-size: 9pt; }
+    .details td:not(:first-child):not(:last-child) { border-left: 0; border-right: 0; }
+    .details td:first-child { border-right: 0; }
+    .details td:last-child { border-left: 0; }
+    .details .label { text-align: right; padding-right: 1mm; white-space: nowrap; }
+    .details .first td { border-top: 1px solid #000; padding-top: 2mm; vertical-align: top; }
+    .details .last td { border-bottom: 1px solid #000; padding-bottom: 6mm; }
+    .purpose { min-height: 12mm; }
+    .u { text-decoration: underline; }
+
+    .sign td { height: 7.5mm; font-size: 9.5pt; }
+    .sign .who td { font-weight: 700; font-size: 10pt; vertical-align: top; padding-top: 1mm; height: 9mm; }
+    .sign .name { font-weight: 700; text-align: center; font-size: 9pt; }
+    .sign .desig { text-align: center; font-size: 8.5pt; line-height: 1.15; }
+    .sign .label { white-space: nowrap; }
+
+    .web-ref { margin: 2mm 0 0; font-size: 7.5pt; color: #555; }
+
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none; }
+      .sheet { width: auto; min-height: 0; margin: 0; box-shadow: none; }
+      .sheet-inner { padding: 0 .4mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" id="print">Print / Save as PDF</button>
+    <a href="index.html#request">Back to the website</a>
+    <p>In the print window, choose <b>Save as PDF</b> as the printer to keep a copy. Use A4 paper.</p>
+  </div>
+
+  <main class="sheet">
+    <div class="sheet-inner">
+      <p class="appendix" data-slip="appendix"></p>
+      <div class="letterhead">
+        <img src="img/dpwh-seal.png" alt="">
+        <p data-head="0"></p>
+        <p data-head="1"></p>
+        <p class="ro" data-head="2"></p>
+        <p data-head="3"></p>
+      </div>
+      <h1>REQUISITION AND ISSUE SLIP (FUEL)</h1>
+
+      <div class="entity">
+        <span>Entity Name : <span data-slip="entity"></span></span>
+        <span>Fund Cluster :</span>
+      </div>
+
+      <table>
+        <colgroup>
+          <col style="width:10.5%"><col style="width:9.5%"><col style="width:4%"><col style="width:13.5%">
+          <col style="width:12.5%"><col style="width:9.5%"><col style="width:9.5%"><col style="width:8.5%"><col style="width:22%">
+        </colgroup>
+        <tr class="meta">
+          <td colspan="6"><p>Division : <span class="fill" data-f="division"></span></p><p>Office : <span class="fill" data-f="office"></span></p></td>
+          <td colspan="3"><p>Responsibility Center Code :</p><p>RIS No. :</p></td>
+        </tr>
+        <tr class="sec">
+          <th colspan="5">Requisition</th>
+          <th colspan="2">Stock Available?</th>
+          <th colspan="2">Issue</th>
+        </tr>
+        <tr class="colhead">
+          <td>Stock No.</td><td>Unit</td><td colspan="2">Description</td><td>Quantity</td>
+          <td>Yes</td><td>No</td><td>Quantity</td><td>Remarks</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="center">Liters</td>
+          <td colspan="2" class="center" data-f="description"></td>
+          <td class="center fill" data-f="litres"></td>
+          <td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="nothing"><td colspan="5">----------nothing follows----------</td><td></td><td></td><td></td><td></td></tr>
+        <tbody id="blank-rows"></tbody>
+      </table>
+
+      <table class="details">
+        <colgroup>
+          <col style="width:10.5%"><col style="width:24%"><col style="width:33%"><col style="width:20%"><col style="width:12.5%">
+        </colgroup>
+        <tr class="first">
+          <td class="label">Purpose:</td>
+          <td colspan="4"><div class="purpose" data-f="purpose"></div></td>
+        </tr>
+        <tr>
+          <td></td><td class="label">DPWH Property Code Number:</td><td class="fill u" data-f="propertyNo"></td>
+          <td colspan="2" class="fill">Odometer / Hour Meter Reading</td>
+        </tr>
+        <tr>
+          <td></td><td class="label">For use of:</td><td class="fill u" data-f="forUse"></td>
+          <td class="label">Present:</td><td class="fill" data-f="odoPresent"></td>
+        </tr>
+        <tr>
+          <td></td><td class="label">Trip Ticket Number:</td><td class="fill" data-f="tripTicket"></td>
+          <td class="label">Previous:</td><td class="fill" data-f="odoPrevious"></td>
+        </tr>
+        <tr>
+          <td></td><td class="label">Requested Date/s:</td><td></td>
+          <td class="label">Distance Travelled:</td><td class="fill" data-f="distance"></td>
+        </tr>
+        <tr>
+          <td></td><td class="label">From:</td><td class="fill" data-f="dateFrom"></td>
+          <td class="label">Balance in Tank:</td><td class="fill" data-f="tankBalance"></td>
+        </tr>
+        <tr class="last">
+          <td></td><td class="label">To:</td><td class="fill" data-f="dateTo"></td>
+          <td></td><td></td>
+        </tr>
+      </table>
+
+      <table class="sign">
+        <colgroup>
+          <col style="width:16%"><col style="width:20%"><col style="width:26%"><col style="width:17%"><col style="width:21%">
+        </colgroup>
+        <tr class="who">
+          <td class="label"></td><td>Requested by:</td><td>Approved by:</td><td>Issued by:</td><td>Received by:</td>
+        </tr>
+        <tr><td class="label">Signature :</td><td></td><td></td><td></td><td></td></tr>
+        <tr>
+          <td class="label">Printed Name :</td>
+          <td class="name" data-f="name"></td>
+          <td class="name" data-slip="approvedName"></td>
+          <td class="name" data-slip="issuedName"></td>
+          <td class="name"></td>
+        </tr>
+        <tr>
+          <td class="label">Designation :</td>
+          <td class="desig" data-f="designation"></td>
+          <td class="desig" data-slip="approvedDesignation"></td>
+          <td class="desig" data-slip="issuedDesignation"></td>
+          <td class="desig"></td>
+        </tr>
+        <tr><td class="label">Date :</td><td></td><td></td><td></td><td></td></tr>
+      </table>
+
+      <p class="web-ref" id="web-ref"></p>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var slip = (window.EMD_CONFIG || {}).fuelSlip || {};
+      var q = new URLSearchParams(location.search);
+      var get = function (k) { return (q.get(k) || "").trim(); };
+      var set = function (sel, text) {
+        document.querySelectorAll(sel).forEach(function (n) { n.textContent = text; });
+      };
+
+      // Fixed parts of the form, from js/data.js
+      set('[data-slip="appendix"]', slip.appendix || "");
+      (slip.header || []).forEach(function (line, i) { set('[data-head="' + i + '"]', line); });
+      set('[data-slip="entity"]', slip.entity || "");
+      set('[data-slip="approvedName"]', (slip.approvedBy || {}).name || "");
+      set('[data-slip="approvedDesignation"]', (slip.approvedBy || {}).designation || "");
+      set('[data-slip="issuedName"]', (slip.issuedBy || {}).name || "");
+      set('[data-slip="issuedDesignation"]', (slip.issuedBy || {}).designation || "");
+
+      // Empty item rows, as on the printed form
+      var body = document.getElementById("blank-rows");
+      for (var r = 0; r < 16; r++) {
+        var tr = document.createElement("tr");
+        tr.className = "blank";
+        tr.innerHTML = "<td></td><td></td><td colspan='2'></td><td></td><td></td><td></td><td></td><td></td>";
+        body.appendChild(tr);
+      }
+
+      // Values from the website's fuel requisition form (blank slip if none)
+      var longDate = function (iso) {
+        if (!iso) return "";
+        var p = iso.split("-").map(Number);
+        return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" });
+      };
+      var present = parseFloat(get("odoPresent").replace(/,/g, ""));
+      var previous = parseFloat(get("odoPrevious").replace(/,/g, ""));
+      var values = {
+        division: get("division"), office: get("office"),
+        description: get("fuel") ? "Fuel, " + get("fuel") : "Fuel,",
+        litres: get("litres"), purpose: get("purpose"),
+        propertyNo: get("propertyNo"), forUse: get("forUse"), tripTicket: get("tripTicket"),
+        odoPresent: get("odoPresent"), odoPrevious: get("odoPrevious"),
+        distance: isFinite(present) && isFinite(previous) && present >= previous ? (present - previous).toLocaleString("en-PH") : "",
+        tankBalance: get("tankBalance"),
+        dateFrom: longDate(get("dateFrom")), dateTo: longDate(get("dateTo")),
+        name: get("name").toUpperCase(), designation: get("designation")
+      };
+      Object.keys(values).forEach(function (k) { set('[data-f="' + k + '"]', values[k]); });
+      if (get("ref")) {
+        document.getElementById("web-ref").textContent = "Prepared on the EMD website · Ref. " + get("ref");
+        document.title = "Fuel slip " + get("ref");
+      }
+
+      document.getElementById("print").addEventListener("click", function () { window.print(); });
+    })();
+  </script>
+</body>
+</html>

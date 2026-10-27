@@ -14,7 +14,15 @@ window.EMD_CONFIG = {
   email: "emd@example.org",
   // Disaster readiness: "normal" or "alert"
   alertLevel: "normal",
-  alertMessage: "No active weather disturbance. Standby units remain on 24-hour call."
+  alertMessage: "No active weather disturbance. Standby units remain on 24-hour call.",
+  // Requisition and Issue Slip (Fuel), from the Regional Office I template.
+  fuelSlip: {
+    appendix: "Appendix 63",
+    header: ["Republic of the Philippines", "DEPARTMENT OF PUBLIC WORKS AND HIGHWAYS", "REGIONAL OFFICE I", "Aguila Road, Sevilla, San Fernando City, La Union"],
+    entity: "Department of Public Works and Highways",
+    approvedBy: { name: "ATTY. MARY ROSE N. MILO", designation: "Chief, Administrative Division" },
+    issuedBy: { name: "LEILA L. COLLADO", designation: "Chief, SPMS" }
+  }
 };
 
 // Repair tracker. stage is an index into EMD_REPAIR_STAGES.
@@ -37,7 +45,7 @@ window.EMD_REPAIRS = [
 // Forms with file: null show "Available at the EMD office" instead of a download link.
 window.EMD_FORMS = [
   { title: "Driver's trip ticket", description: "Required for every official trip of a government vehicle or equipment.", file: null },
-  { title: "Fuel requisition slip", description: "Request for fuel, oil and lubricants for an assigned unit.", file: null },
+  { title: "Requisition and issue slip (fuel)", description: "Blank fuel slip to print and fill in by hand. To print one already filled in, use the fuel requisition form above.", file: "fuel-slip.html" },
   { title: "Pre-repair inspection report", description: "Findings and cost estimate before a repair is approved.", file: null },
   { title: "Job order", description: "Authorizes the repair work and the parts to be used.", file: null },
   { title: "Post-repair inspection report", description: "Confirms the repair was completed before the unit is released.", file: null },

@@ -652,3 +652,11 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
 .lto-preview.lto-valid { background: var(--ok-bg); color: var(--ok); }
 .dialog-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 input:disabled { opacity: .5; }
+
+/* Fuel slip form */
+.form-intro { margin: 0; padding: 10px 14px; border-radius: 8px; background: var(--primary-soft); font-size: .92rem; }
+.form-row-3 { display: grid; gap: 12px; }
+@media (min-width: 600px) { .form-row-3 { grid-template-columns: 1fr 1fr 1fr; } }
+.odometer-group .field > span { font-weight: 500; font-size: .85rem; }
+.odometer-group legend em, .form .field em { color: var(--muted); font-style: normal; font-weight: 400; }
+.slip-print { justify-self: start; }

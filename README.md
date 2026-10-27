@@ -8,11 +8,11 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
   the last digit sets the month (1 = Jan … 9 = Sep, 0 = Oct), the second-to-last digit the week (1–3: days 1–7, 4–6: 8–14, 7–8: 15–21, 9/0: 22–end), and the year is the one after the recorded LTO registration. Set `ltoDue: "YYYY-MM-DD"` on a unit in `js/fleet.js` (or the override field in **Edit**) to override it, e.g. for a brand-new vehicle with a multi-year first registration
 - **PMS schedule**: units due in the next 30 days grouped by month, with overdue / due-soon flags and a "Show all" option
 - **Disaster response readiness**: alert level, emergency hotline, and standby units by type
-- **Requests**: maintenance/repair and fuel requisition forms
+- **Requests**: maintenance/repair form, and a fuel requisition form that fills in a printable **Requisition and Issue Slip (Fuel)** (`fuel-slip.html`, Appendix 63, Regional Office I layout) to print or save as PDF, sign and bring to the EMD office
 - **Repair tracker**: look up a repair by reference number and see its stage
   (request received → pre-repair inspection → job order → repair → post-repair inspection → released)
 - **Citizen's Charter** (RA 11032): requirements, steps and processing time per service
-- **Forms**: trip ticket, fuel requisition slip, inspection reports, job order, PAR, and more
+- **Forms**: blank fuel slip (printable), trip ticket, inspection reports, job order, PAR, and more
 - **Reports**: operating hours by equipment type and monthly fuel consumption
 - **Announcements**, **Organization** (division chief, sections, offices served) and **Contact**
 
@@ -42,6 +42,7 @@ Engine serial numbers are deliberately not published: this repository and site a
 | What | Where in `js/data.js` |
 |---|---|
 | Office name, address, phone, hotline, email | `EMD_CONFIG` |
+| Fuel slip letterhead and signatories (Approved by, Issued by) | `EMD_CONFIG.fuelSlip` |
 | Disaster alert level and message | `EMD_CONFIG.alertLevel` (`"normal"` or `"alert"`), `alertMessage` |
 | Fleet list (and, when available, condition, PMS dates, standby units) | `EMD_FLEET` in `js/fleet.js` (or use **Edit** on the website) |
 | Repairs shown in the tracker | `EMD_REPAIRS` |
@@ -57,7 +58,7 @@ To add the DPWH seal, replace the `EMD` text mark in the header (`.brand-mark` i
 `index.html`) with an `<img>`, using the official file approved by your office.
 
 ## Limitations
-There is no backend yet. Form submissions are confirmed on the page only; new
+There is no backend yet. The fuel requisition form does not send anything: it only prepares the slip for the requester to print. Form submissions are confirmed on the page only; new
 repair requests are remembered in the submitter's own browser so they can be
 tracked there, but they are not sent to the division. Connect the forms to a
 backend or form service to receive submissions.

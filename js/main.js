@@ -189,7 +189,13 @@
   offices.forEach((o) => officeFilter.add(new Option(o, o)));
 
   const unitList = $("#unit-list");
-  fleet.forEach((u) => unitList.appendChild(new Option(`${u.propertyNo} — ${u.plateNo} ${u.makeModel}`)));
+  // Suggestion text -> unit, so request forms can look up the chosen unit.
+  const unitByOption = new Map();
+  fleet.forEach((u) => {
+    const text = `${u.propertyNo} — ${u.plateNo} ${u.makeModel}`;
+    unitByOption.set(text, u);
+    unitList.appendChild(new Option(text));
+  });
 
   function renderFleet() {
     const q = search.value.trim().toLowerCase();
@@ -514,18 +520,21 @@
 
   document.querySelectorAll(".request-form").forEach((form) => {
     const status = form.querySelector(".form-status");
-    const dateInput = form.elements.date;
-    if (dateInput) dateInput.min = today.toISOString().slice(0, 10);
+    const slipLink = form.querySelector(".slip-print");
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       status.className = "form-status";
       form.querySelectorAll(".invalid").forEach((n) => n.classList.remove("invalid"));
+      const f = form.elements;
+      if (f.dateTo) f.dateTo.setCustomValidity(f.dateFrom.value && f.dateTo.value && f.dateTo.value < f.dateFrom.value ? "End date is before start date" : "");
       const invalid = [...form.elements].filter((n) => n.willValidate && !n.checkValidity());
       if (invalid.length) {
         invalid.forEach((n) => (n.type === "radio" ? n.closest("fieldset") : n).classList.add("invalid"));
         invalid[0].focus();
-        status.textContent = "Please complete the highlighted fields.";
+        status.textContent = f.dateTo && f.dateTo.validationMessage && f.dateTo.value
+          ? "The 'to' date is before the 'from' date."
+          : "Please complete the highlighted fields.";
         status.classList.add("error");
         return;
       }
@@ -539,7 +548,21 @@
         }]);
         status.textContent = `Repair request received. Reference: ${ref}. Use it to track the repair below.`;
       } else {
-        status.textContent = `Fuel requisition received. Reference: ${ref}. Bring your trip ticket when claiming the fuel.`;
+        // Nothing is sent: the requester prints the slip and brings it in.
+        const unit = unitByOption.get(f.unit.value.trim());
+        const plate = unit && unit.plateNo && !/^n\/?a$/i.test(unit.plateNo) ? ` (${unit.plateNo})` : "";
+        const params = new URLSearchParams({
+          ref, name: f.name.value.trim(), designation: f.designation.value.trim(),
+          division: f.division.value.trim(), office: f.office.value.trim(),
+          propertyNo: unit ? unit.propertyNo : f.unit.value.trim(), forUse: unit ? unit.makeModel + plate : "",
+          fuel: f.fuel.value, litres: f.litres.value, tripTicket: f.tripTicket.value.trim(),
+          dateFrom: f.dateFrom.value, dateTo: f.dateTo.value,
+          odoPresent: f.odoPresent.value.trim(), odoPrevious: f.odoPrevious.value.trim(),
+          tankBalance: f.tankBalance.value.trim(), purpose: f.details.value.trim()
+        });
+        slipLink.href = "fuel-slip.html?" + params;
+        slipLink.hidden = false;
+        status.textContent = `Your fuel slip is ready (reference ${ref}). Print it or save it as a PDF, have it signed, and bring it to the EMD office with your trip ticket.`;
       }
       status.classList.add("success");
       form.reset();
@@ -587,7 +610,9 @@
   // --- Forms -------------------------------------------------------------
   $("#forms-list").replaceChildren(...(window.EMD_FORMS || []).map((f) => el("li", { class: "form-card" },
     el("div", {}, el("h3", { text: f.title }), el("p", { text: f.description })),
-    f.file
+    f.file && f.file.endsWith(".html")
+      ? el("a", { class: "btn btn-ghost btn-sm", href: f.file, target: "_blank", rel: "noopener", text: "Open printable form" })
+      : f.file
       ? el("a", { class: "btn btn-ghost btn-sm", href: f.file, download: "", text: "Download PDF" })
       : el("span", { class: "form-unavailable", text: "Available at the EMD office" }))));
 

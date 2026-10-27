@@ -261,14 +261,16 @@
           </form>
 
           <form id="form-fuel" class="form request-form" role="tabpanel" aria-labelledby="tab-fuel" data-prefix="FR" novalidate hidden>
+            <p class="form-intro">Fill this in to print a <b>Requisition and Issue Slip (Fuel)</b>. Sign it and bring it to the EMD office with your trip ticket.</p>
             <div class="form-row">
               <label class="field"><span>Requested by</span><input name="name" required autocomplete="name"></label>
-              <label class="field"><span>Office / project</span><input name="office" required></label>
+              <label class="field"><span>Designation</span><input name="designation" required placeholder="e.g. Engineer III"></label>
             </div>
             <div class="form-row">
-              <label class="field"><span>Contact no. or email</span><input name="contact" required></label>
-              <label class="field"><span>Property / plate no.</span><input name="unit" list="unit-list" required></label>
+              <label class="field"><span>Division</span><input name="division" required placeholder="e.g. Construction Division"></label>
+              <label class="field"><span>Office</span><input name="office" required placeholder="e.g. Regional Office"></label>
             </div>
+            <label class="field"><span>Property / plate no.</span><input name="unit" list="unit-list" required placeholder="Start typing the property or plate no."></label>
             <div class="form-row">
               <label class="field"><span>Fuel type</span>
                 <select name="fuel" required>
@@ -277,16 +279,28 @@
                   <option>Gasoline</option>
                 </select>
               </label>
-              <label class="field"><span>Quantity (litres)</span><input name="litres" type="number" min="1" step="1" required></label>
+              <label class="field"><span>Quantity (liters)</span><input name="litres" type="number" min="1" step="1" required></label>
             </div>
             <div class="form-row">
               <label class="field"><span>Trip ticket no.</span><input name="tripTicket" required></label>
-              <label class="field"><span>Date needed</span><input name="date" type="date" required></label>
+              <label class="field"><span>Contact no. or email <em>(optional)</em></span><input name="contact"></label>
             </div>
-            <label class="field"><span>Approving officer</span><input name="approver" required></label>
-            <label class="field"><span>Purpose and destination</span><textarea name="details" rows="3" required></textarea></label>
-            <button class="btn btn-primary" type="submit">Send fuel requisition</button>
+            <div class="form-row">
+              <label class="field"><span>Requested date from</span><input name="dateFrom" type="date" required></label>
+              <label class="field"><span>Requested date to</span><input name="dateTo" type="date" required></label>
+            </div>
+            <fieldset class="field radio-group odometer-group">
+              <legend>Odometer / hour meter reading <em>(optional)</em></legend>
+              <div class="form-row form-row-3">
+                <label class="field"><span>Present</span><input name="odoPresent" inputmode="decimal"></label>
+                <label class="field"><span>Previous</span><input name="odoPrevious" inputmode="decimal"></label>
+                <label class="field"><span>Balance in tank</span><input name="tankBalance" placeholder="e.g. 1/4"></label>
+              </div>
+            </fieldset>
+            <label class="field"><span>Purpose</span><textarea name="details" rows="3" required placeholder="Purpose of the trip and destination"></textarea></label>
+            <button class="btn btn-primary" type="submit">Prepare fuel slip</button>
             <p class="form-status" role="status" aria-live="polite"></p>
+            <a class="btn btn-ghost slip-print" id="slip-print" target="_blank" rel="noopener" hidden>Print / Save as PDF</a>
           </form>
           <datalist id="unit-list"></datalist>
         </div>
