@@ -539,6 +539,33 @@
         <label class="field"><span>End-user</span><input name="endUser"></label>
         <label class="field"><span>Position</span><input name="position"></label>
       </div>
+      <fieldset class="field dialog-group">
+        <legend>Condition and maintenance</legend>
+        <div class="form-row">
+          <label class="field"><span>Condition</span>
+            <select name="condition">
+              <option value="">Not recorded</option>
+              <option>Serviceable</option>
+              <option>Under repair</option>
+              <option>Unserviceable</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" name="standby"> On the disaster standby list</label>
+        </div>
+        <div class="form-row">
+          <label class="field"><span>Next PMS date</span><input type="date" name="nextPms"></label>
+          <label class="field"><span>PMS type</span><input name="pmsType" list="pms-types" placeholder="e.g. 5,000 km service"></label>
+        </div>
+        <small class="field-hint">Units with a next PMS date appear in the PMS schedule; standby units appear under Disaster readiness with their condition.</small>
+      </fieldset>
+      <datalist id="pms-types">
+        <option value="5,000 km service"></option>
+        <option value="10,000 km service"></option>
+        <option value="250-hr service"></option>
+        <option value="500-hr service"></option>
+        <option value="1,000-hr service"></option>
+        <option value="Change oil"></option>
+      </datalist>
       <div class="dialog-actions">
         <button class="btn btn-primary" type="submit" value="save">Save changes</button>
         <button class="btn btn-ghost" type="button" value="cancel">Cancel</button>

@@ -104,7 +104,10 @@
   // Edits made with the "Edit" button are kept in this browser, keyed by the
   // published property no. + plate no., until someone downloads fleet.js and
   // uploads it to GitHub. Once the published list matches, they are cleared.
-  const EDITABLE = ["plateNo", "ltoDate", "ltoDue", "parDate", "office", "endUser", "position"];
+  const EDITABLE = ["plateNo", "ltoDate", "ltoDue", "parDate", "office", "endUser", "position",
+    "condition", "nextPms", "pmsType", "standby"];
+  // Blank, missing and false (standby unticked) all count as "not set".
+  const norm = (v) => (v === undefined || v === null || v === false ? "" : v);
   const EDITS_KEY = "emd-fleet-edits";
   const baseFleet = fleet.map((u) => ({ ...u }));
   const unitKeys = new Map(fleet.map((u, i) => [u, `${baseFleet[i].propertyNo}|${baseFleet[i].plateNo}`]));
@@ -120,7 +123,7 @@
         else delete u[f];
       });
       // Drop edits the published list already contains.
-      if (edit && EDITABLE.every((f) => (edit[f] ?? baseFleet[i][f] ?? "") === (baseFleet[i][f] ?? ""))) delete fleetEdits[key];
+      if (edit && EDITABLE.every((f) => norm(f in edit ? edit[f] : baseFleet[i][f]) === norm(baseFleet[i][f]))) delete fleetEdits[key];
     });
     storage.set(EDITS_KEY, fleetEdits);
   }
@@ -211,7 +214,7 @@
     const sortValue = (u) => sortKey === "parDate" || sortKey === "ltoDate" ? dateKey(u[sortKey]) : u[sortKey];
     const rows = fleet
       .filter((u) =>
-        (!q || [u.propertyNo, u.plateNo, u.type, u.makeModel, u.office, u.endUser, u.position]
+        (!q || [u.propertyNo, u.plateNo, u.type, u.makeModel, u.office, u.endUser, u.position, u.condition]
           .some((v) => (v || "").toLowerCase().includes(q))) &&
         (!typeFilter.value || u.type === typeFilter.value) &&
         (!officeFilter.value || officeGroup(u.office) === officeFilter.value) &&
@@ -230,7 +233,8 @@
       el("td", { "data-label": "Property no." }, el("span", { class: "cell-main", text: u.propertyNo }),
         isEdited(u) ? el("small", { class: "edited-tag", text: "Edited" }) : ""),
       el("td", { "data-label": "Plate no.", text: dash(u.plateNo) }),
-      el("td", { "data-label": "Equipment" }, el("span", { class: "cell-main", text: u.makeModel }), el("small", { text: u.type })),
+      el("td", { "data-label": "Equipment" }, el("span", { class: "cell-main", text: u.makeModel }),
+        el("small", {}, u.type, u.condition ? el("span", { class: conditionClass(u.condition) + " cond-badge", text: u.condition }) : "")),
       el("td", { "data-label": "Assigned office" }, ...(() => {
         const [office, place] = splitOffice(u.office);
         return [el("span", { class: "cell-main", text: dash(office) }), place ? el("small", { text: place }) : ""];
@@ -332,9 +336,10 @@
     initial = {
       plateNo: u.plateNo || "", ltoDate: dateKey(u.ltoDate), ltoDue: u.ltoDue || "",
       parDate: dateKey(u.parDate), parAwaiting: parStatus(u) === "awaiting",
-      office: u.office || "", endUser: u.endUser || "", position: u.position || ""
+      office: u.office || "", endUser: u.endUser || "", position: u.position || "",
+      condition: u.condition || "", nextPms: u.nextPms || "", pmsType: u.pmsType || "", standby: Boolean(u.standby)
     };
-    Object.entries(initial).forEach(([k, v]) => { if (k === "parAwaiting") f[k].checked = v; else f[k].value = v; });
+    Object.entries(initial).forEach(([k, v]) => { if (typeof v === "boolean") f[k].checked = v; else f[k].value = v; });
     f.parDate.disabled = initial.parAwaiting;
     $("#unit-dialog-title").textContent = `Edit ${u.propertyNo}`;
     $("#unit-dialog-sub").textContent = u.makeModel;
@@ -352,11 +357,11 @@
     const key = unitKeys.get(u);
     const diff = {};
     EDITABLE.forEach((field) => {
-      if ((values[field] ?? "") !== (baseFleet[i][field] ?? "")) diff[field] = values[field];
+      if (norm(values[field]) !== norm(baseFleet[i][field])) diff[field] = values[field];
     });
     if (Object.keys(diff).length) fleetEdits[key] = diff; else delete fleetEdits[key];
     applyEdits();
-    renderFleet();
+    renderAll();
   }
 
   unitForm.addEventListener("submit", (e) => {
@@ -370,7 +375,8 @@
       ltoDue: f.ltoDue.value,
       parDate: f.parAwaiting.checked ? (initial.parAwaiting ? u.parDate : "Waiting for updated PAR")
         : f.parDate.value === initial.parDate && !initial.parAwaiting ? u.parDate || "" : toDMY(f.parDate.value),
-      office: f.office.value.trim(), endUser: f.endUser.value.trim(), position: f.position.value.trim()
+      office: f.office.value.trim(), endUser: f.endUser.value.trim(), position: f.position.value.trim(),
+      condition: f.condition.value, nextPms: f.nextPms.value, pmsType: f.pmsType.value.trim(), standby: f.standby.checked
     };
     saveEdit(u, values);
     dialog.close();
@@ -379,7 +385,7 @@
   $("#unit-revert").addEventListener("click", () => {
     delete fleetEdits[unitKeys.get(editing)];
     applyEdits();
-    renderFleet();
+    renderAll();
     dialog.close();
   });
 
@@ -387,7 +393,7 @@
     if (!confirm("Discard all fleet changes saved in this browser?")) return;
     fleetEdits = {};
     applyEdits();
-    renderFleet();
+    renderAll();
   });
 
   // Rebuild js/fleet.js from the current list, one unit per line.
@@ -401,7 +407,9 @@
       "//   condition: \"Serviceable\" | \"Under repair\" | \"Unserviceable\"",
       "//   nextPms: \"YYYY-MM-DD\", pmsType: \"250-hr service\", standby: true"
     ].join("\n");
-    const body = fleet.map((u) => "  " + JSON.stringify(u, (k, v) => (k === "ltoDue" && !v ? undefined : v))).join(",\n");
+    // Optional fields are left out when blank.
+    const optionalFields = ["ltoDue", "condition", "nextPms", "pmsType", "standby"];
+    const body = fleet.map((u) => "  " + JSON.stringify(u, (k, v) => (optionalFields.includes(k) && !v ? undefined : v))).join(",\n");
     const blob = new Blob([`${header}\nwindow.EMD_FLEET = [\n${body}\n];\n`], { type: "text/javascript" });
     const link = el("a", { href: URL.createObjectURL(blob), download: "fleet.js" });
     document.body.append(link);
@@ -427,10 +435,8 @@
   // Shows the next 30 days by default (overdue units always included),
   // grouped by month; "Show all" extends it to every scheduled unit.
   const PMS_WINDOW = 30;
-  const pmsAll = fleet
-    .filter((u) => u.nextPms)
-    .sort((a, b) => a.nextPms.localeCompare(b.nextPms));
-  const pmsSoon = pmsAll.filter((u) => daysFromToday(u.nextPms) <= PMS_WINDOW);
+  let pmsAll = [];
+  let pmsSoon = [];
   const pmsMore = $("#pms-more");
   let pmsExpanded = false;
 
@@ -446,12 +452,14 @@
         el("b", { text: String(d.getDate()) })),
       el("div", { class: "pms-body" },
         el("p", { class: "pms-unit", text: u.makeModel }),
-        el("p", { class: "pms-meta", text: `${u.propertyNo} · ${u.pmsType}` }),
+        el("p", { class: "pms-meta", text: u.pmsType ? `${u.propertyNo} · ${u.pmsType}` : u.propertyNo }),
         el("p", { class: "pms-meta", text: dash(u.office) })),
       el("span", { class: status[1], text: status[0] }));
   }
 
   function renderPms() {
+    pmsAll = fleet.filter((u) => u.nextPms).sort((a, b) => a.nextPms.localeCompare(b.nextPms));
+    pmsSoon = pmsAll.filter((u) => daysFromToday(u.nextPms) <= PMS_WINDOW);
     const list = pmsExpanded ? pmsAll : pmsSoon;
     const months = list.reduce((acc, u) => {
       const key = u.nextPms.slice(0, 7);
@@ -468,26 +476,36 @@
     pmsMore.textContent = pmsExpanded ? `Show next ${PMS_WINDOW} days only` : `Show all scheduled PMS (${pmsAll.length})`;
   }
   pmsMore.addEventListener("click", () => { pmsExpanded = !pmsExpanded; renderPms(); });
-  renderPms();
 
   // --- Disaster readiness ------------------------------------------------
   const alertOn = config.alertLevel === "alert";
   $("#alert-card").classList.toggle("is-alert", alertOn);
   $("#alert-level").textContent = alertOn ? "Alert: response operations active" : "Normal operations";
 
-  const standby = fleet.filter((u) => u.standby);
-  const byType = standby.reduce((acc, u) => ((acc[u.type] = acc[u.type] || []).push(u), acc), {});
-  $("#standby-grid").replaceChildren(...Object.entries(byType).map(([type, units]) => {
-    const ready = units.filter((u) => u.condition === "Serviceable").length;
-    return el("article", { class: "standby-card" },
-      el("header", {},
-        el("h3", { text: type }),
-        el("p", { text: `${ready} of ${units.length} ready` })),
-      el("ul", {}, units.map((u) => el("li", {},
-        el("span", { text: `${u.propertyNo} · ${dash(u.office)}` }),
-        u.condition ? el("span", { class: conditionClass(u.condition), text: u.condition }) : ""))));
-  }));
-  $("#standby-empty").hidden = standby.length > 0;
+  function renderStandby() {
+    const standby = fleet.filter((u) => u.standby);
+    const byType = standby.reduce((acc, u) => ((acc[u.type] = acc[u.type] || []).push(u), acc), {});
+    $("#standby-grid").replaceChildren(...Object.entries(byType).map(([type, units]) => {
+      const ready = units.filter((u) => u.condition === "Serviceable").length;
+      return el("article", { class: "standby-card" },
+        el("header", {},
+          el("h3", { text: type }),
+          el("p", { text: `${ready} of ${units.length} ready` })),
+        el("ul", {}, units.map((u) => el("li", {},
+          el("span", { text: `${u.propertyNo} · ${dash(u.office)}` }),
+          u.condition ? el("span", { class: conditionClass(u.condition), text: u.condition }) : ""))));
+    }));
+    $("#standby-empty").hidden = standby.length > 0;
+  }
+
+  // Fleet edits can change the PMS schedule and the standby list too.
+  function renderAll() {
+    renderFleet();
+    renderPms();
+    renderStandby();
+  }
+  renderPms();
+  renderStandby();
 
   // --- Request tabs ------------------------------------------------------
   const tabs = [...document.querySelectorAll('[role="tab"]')];
