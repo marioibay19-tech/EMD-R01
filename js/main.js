@@ -553,6 +553,7 @@
         const plate = unit && unit.plateNo && !/^n\/?a$/i.test(unit.plateNo) ? ` (${unit.plateNo})` : "";
         const params = new URLSearchParams({
           name: f.name.value.trim(), designation: f.designation.value.trim(),
+          receivedBy: f.receivedBy.value.trim(), receivedDesignation: f.receivedDesignation.value.trim(),
           division: f.division.value.trim(), office: f.office.value.trim(),
           propertyNo: unit ? unit.propertyNo : f.unit.value.trim(), forUse: unit ? unit.makeModel + plate : "",
           fuel: f.fuel.value, litres: f.litres.value, risNo: f.risNo.value.trim(),

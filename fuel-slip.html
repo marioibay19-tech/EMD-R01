@@ -187,14 +187,14 @@
           <td class="name" data-f="name"></td>
           <td class="name" data-slip="approvedName"></td>
           <td class="name" data-slip="issuedName"></td>
-          <td class="name"></td>
+          <td class="name" data-f="receivedBy"></td>
         </tr>
         <tr>
           <td class="label">Designation :</td>
           <td class="desig" data-f="designation"></td>
           <td class="desig" data-slip="approvedDesignation"></td>
           <td class="desig" data-slip="issuedDesignation"></td>
-          <td class="desig"></td>
+          <td class="desig" data-f="receivedDesignation"></td>
         </tr>
         <tr><td class="label">Date :</td><td></td><td></td><td></td><td></td></tr>
       </table>
@@ -248,7 +248,8 @@
         distance: isFinite(present) && isFinite(previous) && present >= previous ? (present - previous).toLocaleString("en-PH") : "",
         tankBalance: get("tankBalance"),
         dateFrom: longDate(get("dateFrom")), dateTo: longDate(get("dateTo")),
-        name: get("name").toUpperCase(), designation: get("designation")
+        name: get("name").toUpperCase(), designation: get("designation"),
+        receivedBy: get("receivedBy").toUpperCase(), receivedDesignation: get("receivedDesignation")
       };
       Object.keys(values).forEach(function (k) { set('[data-f="' + k + '"]', values[k]); });
       // Keep the plate number in "For use of" on one line: "Model (ABS-6277)"
