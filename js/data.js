@@ -15,7 +15,7 @@ window.EMD_CONFIG = {
   // Google Sheet request log (google-apps-script/README.md). Paste the web app
   // URL here to send requests to the sheet and show it in Request monitoring.
   // Leave it blank to keep requests in each browser and js/requests.js.
-  requestLog: "",
+  requestLog: "https://script.google.com/macros/s/AKfycbwyk6QWjtr-y1o3btdQidUueAZMM5-Qd5vE-oABhsq6gWatDcoqCU2xKza_BN04oxeaJA/exec",
   // Where the Admin page sends you to upload files.
   github: { repo: "marioibay19-tech/EMD-R01", branch: "claude/admiring-sagan-f7r3nh" },
   // Disaster readiness: "normal" or "alert"
