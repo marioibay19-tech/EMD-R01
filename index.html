@@ -41,11 +41,12 @@
         <span></span><span></span><span></span>
       </button>
       <nav id="site-nav" class="site-nav" aria-label="Primary">
+        <a href="#request">Requests</a>
+        <a href="#monitoring">Monitoring</a>
         <a href="#fleet">Fleet</a>
         <a href="#pms">PMS</a>
         <a href="#readiness">Readiness</a>
-        <a href="#request">Requests</a>
-        <a href="#monitoring">Monitoring</a>
+        <a href="#announcements">News</a>
         <a href="#forms">Forms</a>
         <a href="#reports">Reports</a>
         <a href="#about">About</a>
@@ -79,10 +80,10 @@
 
     <div class="container quick-actions-wrap">
       <ul class="quick-actions" aria-label="Quick actions">
-        <li><a href="#request" data-open-tab="tab-repair">
+        <li><a href="#request-form" data-open-tab="tab-repair">
           <span class="qa-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5Z"/></svg></span>
           <span><b>Repair request</b><small>Report a breakdown</small></span></a></li>
-        <li><a href="#request" data-open-tab="tab-fuel">
+        <li><a href="#request-form" data-open-tab="tab-fuel">
           <span class="qa-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M14 9h2l2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h5"/></svg></span>
           <span><b>Fuel requisition</b><small>With an approved trip ticket</small></span></a></li>
         <li><a href="#track">
@@ -94,139 +95,13 @@
       </ul>
     </div>
 
-    <section class="section" id="services">
-      <div class="container">
-        <header class="section-head">
-          <p class="kicker">Services</p>
-          <h2>What we do</h2>
-          <p>Support across the full life of every unit in the fleet.</p>
-        </header>
-        <div class="cards">
-          <article class="card">
-            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 16V8h11v8M14 11h4l3 3v2h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></div>
-            <h3>Fleet assignment</h3>
-            <p>Assignment of heavy equipment and service vehicles to district offices and projects.</p>
-          </article>
-          <article class="card">
-            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></div>
-            <h3>Preventive maintenance</h3>
-            <p>Scheduled PMS by hour-meter or odometer reading to keep units serviceable.</p>
-          </article>
-          <article class="card">
-            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5Z"/></svg></div>
-            <h3>Repair and rehabilitation</h3>
-            <p>Pre-repair inspection, job orders, repair and post-repair inspection before release.</p>
-          </article>
-          <article class="card">
-            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M14 9h2l2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h5"/></svg></div>
-            <h3>Fuel, oil and lubricants</h3>
-            <p>Fuel requisition and issuance against approved trip tickets, with consumption records.</p>
-          </article>
-          <article class="card">
-            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></div>
-            <h3>Property records and disposal</h3>
-            <p>Accountability records, inventory, and disposal of unserviceable units.</p>
-          </article>
-          <article class="card">
-            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3ZM12 10v4M12 17h.01"/></svg></div>
-            <h3>Emergency deployment</h3>
-            <p>Standby equipment for road clearing and disaster response operations.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section section-alt" id="fleet">
-      <div class="container">
-        <header class="section-head">
-          <p class="kicker">Fleet</p>
-          <h2>Fleet status</h2>
-          <p>Every unit, the office it's assigned to, its accountable end-user, and its PAR and LTO registration dates.</p>
-        </header>
-
-        <div class="condition-chips" id="condition-chips" role="group" aria-label="Filter by PAR status"></div>
-        <div class="condition-chips" id="lto-chips" role="group" aria-label="Filter by LTO registration status"></div>
-
-        <div class="toolbar">
-          <label class="field field-grow">
-            <span class="sr-only">Search fleet</span>
-            <input id="fleet-search" type="search" placeholder="Search property no., plate no., model, office or end-user…" autocomplete="off">
-          </label>
-          <label class="field">
-            <span class="sr-only">Equipment type</span>
-            <select id="fleet-type"><option value="">All types</option></select>
-          </label>
-          <label class="field">
-            <span class="sr-only">Assigned office</span>
-            <select id="fleet-office"><option value="">All offices</option></select>
-          </label>
-        </div>
-
-        <div class="edit-bar" id="edit-bar" role="status" hidden>
-          <p><b id="edit-count"></b> Saved in this browser only. To publish, download the file and upload it to GitHub as <code>js/fleet.js</code>.</p>
-          <div class="edit-bar-actions">
-            <button class="btn btn-primary btn-sm" type="button" id="edit-download">Download fleet.js</button>
-            <button class="btn btn-ghost btn-sm" type="button" id="edit-discard">Discard changes</button>
-          </div>
-        </div>
-
-        <div class="table-wrap">
-          <table class="data-table" id="fleet-table">
-            <thead>
-              <tr>
-                <th scope="col"><button data-sort="propertyNo">Property no.</button></th>
-                <th scope="col"><button data-sort="plateNo">Plate no.</button></th>
-                <th scope="col"><button data-sort="makeModel">Equipment</button></th>
-                <th scope="col"><button data-sort="office">Assigned office</button></th>
-                <th scope="col"><button data-sort="endUser">End-user</button></th>
-                <th scope="col"><button data-sort="parDate">Date of PAR</button></th>
-                <th scope="col"><button data-sort="ltoDate">LTO registration</button></th>
-                <th scope="col"><span class="sr-only">Edit</span></th>
-              </tr>
-            </thead>
-            <tbody id="fleet-body"></tbody>
-          </table>
-          <p id="fleet-empty" class="empty" hidden>No units match your filters.</p>
-        </div>
-        <p class="table-meta" id="fleet-count" aria-live="polite"></p>
-        <button class="btn btn-ghost fleet-more" type="button" id="fleet-more" hidden></button>
-      </div>
-    </section>
-
-    <section class="section" id="pms">
-      <div class="container">
-        <header class="section-head">
-          <p class="kicker">Maintenance</p>
-          <h2>Preventive maintenance schedule</h2>
-          <p>Units due for preventive maintenance in the next 30 days. Bring them to the motor pool on the scheduled date.</p>
-        </header>
-        <div class="pms-groups" id="pms-list"></div>
-        <p id="pms-empty" class="empty" hidden>The PMS schedule will be posted here.</p>
-        <button class="btn btn-ghost pms-more" id="pms-more" type="button" hidden></button>
-      </div>
-    </section>
-
-    <section class="section section-alt" id="readiness">
-      <div class="container">
-        <header class="section-head">
-          <p class="kicker">Emergency</p>
-          <h2>Disaster response readiness</h2>
-          <p>Equipment on standby for road clearing and emergency operations.</p>
-        </header>
-        <div class="alert-card" id="alert-card">
-          <div>
-            <p class="alert-level" id="alert-level"></p>
-            <p class="alert-message" data-config="alertMessage"></p>
-          </div>
-          <div class="hotline">
-            <span>Emergency hotline</span>
-            <a id="hotline-link" data-config="hotline"></a>
-          </div>
-        </div>
-        <div class="standby-grid" id="standby-grid"></div>
-        <p id="standby-empty" class="empty" hidden>The list of standby equipment will be posted here.</p>
-      </div>
-    </section>
+    <div class="container">
+      <a class="advisory" id="advisory" href="#announcements" hidden>
+        <span class="advisory-tag">Latest advisory</span>
+        <span class="advisory-text"><b id="advisory-title"></b> <time id="advisory-date"></time></span>
+        <span class="advisory-more" aria-hidden="true">Read more →</span>
+      </a>
+    </div>
 
     <section class="section" id="request">
       <div class="container request-grid">
@@ -239,11 +114,23 @@
           <ol class="steps">
             <li><strong>Submit</strong> the form with the unit's property or plate number.</li>
             <li><strong>Review</strong>: the division checks the documents and schedules an inspection or approves the fuel.</li>
-            <li><strong>Fulfil</strong>: receive the fuel, or track your repair below until the unit is released.</li>
+            <li><strong>Fulfil</strong>: receive the fuel, or track your repair until the unit is released.</li>
           </ol>
+          <div class="tracker" id="track">
+            <h3>Track a repair</h3>
+            <p class="tracker-hint">Enter the request no. printed on your maintenance request form.</p>
+            <form id="track-form" class="track-form">
+              <label class="field field-grow">
+                <span class="sr-only">Repair reference number</span>
+                <input name="ref" placeholder="e.g. RR-20261027-001" required autocapitalize="characters">
+              </label>
+              <button class="btn btn-primary" type="submit">Track</button>
+            </form>
+            <div id="track-result" aria-live="polite"></div>
+          </div>
         </div>
 
-        <div class="form-panel">
+        <div class="form-panel" id="request-form">
           <div class="tabs" role="tablist" aria-label="Request type">
             <button role="tab" id="tab-repair" aria-controls="form-repair" aria-selected="true">Maintenance / repair</button>
             <button role="tab" id="tab-fuel" aria-controls="form-fuel" aria-selected="false" tabindex="-1">Fuel requisition</button>
@@ -326,18 +213,6 @@
         </div>
       </div>
 
-      <div class="container" id="track">
-        <div class="tracker">
-          <h3>Track a repair</h3>
-          <form id="track-form" class="track-form">
-            <label class="field field-grow">
-              <span class="sr-only">Repair reference number</span>
-              <input name="ref" placeholder="Reference no., e.g. RR-20261027-482" required>
-            </label>
-            <button class="btn btn-ghost" type="submit">Track</button>
-          </form>
-          <div id="track-result" aria-live="polite"></div>
-        </div>
       </div>
     </section>
 
@@ -398,6 +273,121 @@
       </div>
     </section>
 
+    <section class="section" id="fleet">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">Fleet</p>
+          <h2>Fleet status</h2>
+          <p>Every unit, the office it's assigned to, its accountable end-user, and its PAR and LTO registration dates.</p>
+        </header>
+
+        <div class="condition-chips" id="condition-chips" role="group" aria-label="Filter by PAR status"></div>
+        <div class="condition-chips" id="lto-chips" role="group" aria-label="Filter by LTO registration status"></div>
+
+        <div class="toolbar">
+          <label class="field field-grow">
+            <span class="sr-only">Search fleet</span>
+            <input id="fleet-search" type="search" placeholder="Search property no., plate no., model, office or end-user…" autocomplete="off">
+          </label>
+          <label class="field">
+            <span class="sr-only">Equipment type</span>
+            <select id="fleet-type"><option value="">All types</option></select>
+          </label>
+          <label class="field">
+            <span class="sr-only">Assigned office</span>
+            <select id="fleet-office"><option value="">All offices</option></select>
+          </label>
+        </div>
+
+        <div class="edit-bar" id="edit-bar" role="status" hidden>
+          <p><b id="edit-count"></b> Saved in this browser only. To publish, download the file and upload it to GitHub as <code>js/fleet.js</code>.</p>
+          <div class="edit-bar-actions">
+            <button class="btn btn-primary btn-sm" type="button" id="edit-download">Download fleet.js</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="edit-discard">Discard changes</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="fleet-table">
+            <thead>
+              <tr>
+                <th scope="col"><button data-sort="propertyNo">Property no.</button></th>
+                <th scope="col"><button data-sort="plateNo">Plate no.</button></th>
+                <th scope="col"><button data-sort="makeModel">Equipment</button></th>
+                <th scope="col"><button data-sort="office">Assigned office</button></th>
+                <th scope="col"><button data-sort="endUser">End-user</button></th>
+                <th scope="col"><button data-sort="parDate">Date of PAR</button></th>
+                <th scope="col"><button data-sort="ltoDate">LTO registration</button></th>
+                <th scope="col"><span class="sr-only">Edit</span></th>
+              </tr>
+            </thead>
+            <tbody id="fleet-body"></tbody>
+          </table>
+          <p id="fleet-empty" class="empty" hidden>No units match your filters.</p>
+        </div>
+        <p class="table-meta" id="fleet-count" aria-live="polite"></p>
+        <button class="btn btn-ghost fleet-more" type="button" id="fleet-more" hidden></button>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="pms">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">Maintenance</p>
+          <h2>Preventive maintenance schedule</h2>
+          <p>Units due for preventive maintenance in the next 30 days. Bring them to the motor pool on the scheduled date.</p>
+        </header>
+        <div class="pms-groups" id="pms-list"></div>
+        <div id="pms-empty" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span>
+          <div>
+            <p class="empty-title">No maintenance due in the next 30 days</p>
+            <p>Scheduled PMS will appear here once next service dates are set in the fleet list.</p>
+          </div>
+        </div>
+        <button class="btn btn-ghost pms-more" id="pms-more" type="button" hidden></button>
+      </div>
+    </section>
+
+    <section class="section" id="readiness">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">Emergency</p>
+          <h2>Disaster response readiness</h2>
+          <p>Equipment on standby for road clearing and emergency operations.</p>
+        </header>
+        <div class="alert-card" id="alert-card">
+          <div>
+            <p class="alert-level" id="alert-level"></p>
+            <p class="alert-message" data-config="alertMessage"></p>
+          </div>
+          <div class="hotline">
+            <span>Emergency hotline</span>
+            <a id="hotline-link" data-config="hotline"></a>
+          </div>
+        </div>
+        <div class="standby-grid" id="standby-grid"></div>
+        <div id="standby-empty" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 3 19h18L12 3Z"/><path d="M12 10v4M12 17h.01"/></svg></span>
+          <div>
+            <p class="empty-title">No standby equipment listed yet</p>
+            <p>Units marked for disaster standby in the fleet list will appear here, grouped by type, with their condition.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="announcements">
+      <div class="container">
+        <header class="section-head">
+          <p class="kicker">News</p>
+          <h2>Announcements</h2>
+          <p>Schedules, advisories and policy updates from the division.</p>
+        </header>
+        <div class="news" id="news-list"></div>
+      </div>
+    </section>
+
     <section class="section" id="forms">
       <div class="container">
         <header class="section-head">
@@ -437,14 +427,45 @@
       </div>
     </section>
 
-    <section class="section" id="announcements">
+    <section class="section" id="services">
       <div class="container">
         <header class="section-head">
-          <p class="kicker">News</p>
-          <h2>Announcements</h2>
-          <p>Schedules, advisories and policy updates from the division.</p>
+          <p class="kicker">Services</p>
+          <h2>What we do</h2>
+          <p>Support across the full life of every unit in the fleet.</p>
         </header>
-        <div class="news" id="news-list"></div>
+        <div class="cards">
+          <article class="card">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 16V8h11v8M14 11h4l3 3v2h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></div>
+            <h3>Fleet assignment</h3>
+            <p>Assignment of heavy equipment and service vehicles to district offices and projects.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></div>
+            <h3>Preventive maintenance</h3>
+            <p>Scheduled PMS by hour-meter or odometer reading to keep units serviceable.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5Z"/></svg></div>
+            <h3>Repair and rehabilitation</h3>
+            <p>Pre-repair inspection, job orders, repair and post-repair inspection before release.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M14 9h2l2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3M7 8h5"/></svg></div>
+            <h3>Fuel, oil and lubricants</h3>
+            <p>Fuel requisition and issuance against approved trip tickets, with consumption records.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></div>
+            <h3>Property records and disposal</h3>
+            <p>Accountability records, inventory, and disposal of unserviceable units.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3ZM12 10v4M12 17h.01"/></svg></div>
+            <h3>Emergency deployment</h3>
+            <p>Standby equipment for road clearing and disaster response operations.</p>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -490,8 +511,8 @@
       <div>
         <h2>Services</h2>
         <ul class="footer-links">
-          <li><a href="#request" data-open-tab="tab-repair">Repair request</a></li>
-          <li><a href="#request" data-open-tab="tab-fuel">Fuel requisition</a></li>
+          <li><a href="#request-form" data-open-tab="tab-repair">Repair request</a></li>
+          <li><a href="#request-form" data-open-tab="tab-fuel">Fuel requisition</a></li>
           <li><a href="#track">Track a repair</a></li>
           <li><a href="#readiness">Emergency deployment</a></li>
         </ul>

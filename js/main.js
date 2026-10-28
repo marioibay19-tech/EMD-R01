@@ -1164,6 +1164,14 @@
     el("h3", { text: n.title }),
     el("p", { text: n.body }))));
   $("#announcements").hidden = !news.length;
+  // The newest announcement also shows as a strip under the quick actions.
+  const latest = news[0];
+  $("#advisory").hidden = !latest;
+  if (latest) {
+    $("#advisory-title").textContent = latest.title;
+    $("#advisory-date").textContent = latest.date ? fmtDate(latest.date) : "";
+    $("#advisory-date").setAttribute("datetime", latest.date || "");
+  }
 
   // --- Organization ------------------------------------------------------
   const org = content.org || {};
