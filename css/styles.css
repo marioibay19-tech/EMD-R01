@@ -955,3 +955,5 @@ input:disabled { opacity: .5; }
   .fl-header-actions .admin-back { display: none; }
 }
 .fl-table-wrap, .fl-grid-wrap { position: relative; }
+.fl-from-req { display: block; font-size: .72rem; font-weight: 600; color: var(--primary); }
+#fl-req-status:empty { display: none; }

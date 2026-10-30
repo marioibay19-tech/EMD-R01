@@ -102,6 +102,8 @@
       readings: s.readings && typeof s.readings === "object" ? s.readings : {},
       pm: s.pm && typeof s.pm === "object" ? s.pm : {},
       settings: { ...DEFAULT_SETTINGS, ...(s.settings || {}) },
+      // Issued fuel requisitions whose auto-added entry was deleted here.
+      skippedRequests: Array.isArray(s.skippedRequests) ? s.skippedRequests : [],
       updated: s.updated || ""
     };
   }
@@ -290,6 +292,7 @@
         setSync("ok", "Connected to Google Sheet");
       }
       $("#fl-connect").hidden = true;
+      syncRequests();
       return true;
     } catch (err) {
       connected = false;
@@ -419,14 +422,17 @@
       const days = dayDiff(e.from, e.to) + 1;
       const del = el("button", { class: "btn btn-ghost btn-sm", type: "button", text: "Delete", "aria-label": `Delete ${fmtNum(e.litres, 2)} L for ${u.id}` });
       del.addEventListener("click", () => {
-        if (!confirm(`Delete ${fmtNum(e.litres, 2)} L for ${u.id} (${e.from} to ${e.to})?`)) return;
+        if (!confirm(`Delete ${fmtNum(e.litres, 2)} L for ${u.id} (${e.from} to ${e.to})?` +
+          (e.request ? `\n\nIt came from fuel requisition ${e.request} and won't be added again.` : ""))) return;
         state.entries = state.entries.filter((x) => x !== e);
+        if (e.request && !state.skippedRequests.includes(e.request)) state.skippedRequests.push(e.request);
         changed();
         renderInput();
         updateCounts();
       });
       return el("tr", {},
-        el("td", { class: "strong", text: u.id }), el("td", { text: u.plate || "—" }),
+        el("td", { class: "strong" }, u.id, e.request ? el("small", { class: "fl-from-req", text: e.request }) : ""),
+        el("td", { text: u.plate || "—" }),
         el("td", { class: "num", text: fmtNum(e.litres, 2) }), el("td", { text: e.from }), el("td", { text: e.to }),
         el("td", { class: "num", text: String(days) }), el("td", { class: "num", text: fmtNum(e.litres / days, 2) }),
         el("td", { class: "actions" }, del));
@@ -971,6 +977,76 @@
     renderAll();
   });
 
+  // --- Issued fuel requisitions -----------------------------------------
+  // A fuel requisition marked "Issued" in Request monitoring is added here
+  // automatically, with the liters issued (or requested) over its dates. If
+  // the requisition later changes, its entry follows; if it is no longer
+  // Issued, its entry is removed. Entries deleted here are not re-added.
+  const fleetText = new Map((window.EMD_FLEET || []).map((u) => [`${u.propertyNo} — ${u.plateNo} ${u.makeModel}`, `${u.propertyNo}|${u.plateNo}`]));
+  function requestUnit(text) {
+    const t = String(text || "").trim();
+    if (fleetText.has(t)) return unitByKey.get(fleetText.get(t));
+    return findUnit(t) || findUnit(t.split(" — ")[0]) || findUnit(t.split(/\s+/)[0]);
+  }
+  async function loadRequests() {
+    if (LOG_URL) {
+      const res = await fetch(LOG_URL + (LOG_URL.includes("?") ? "&" : "?") + "action=list", { cache: "no-store" });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      return data.requests || [];
+    }
+    // Without the sheet: the published list plus this browser's changes.
+    const byId = new Map((window.EMD_REQUESTS || []).map((r) => [r.id, r]));
+    Object.entries(storage.get("emd-request-edits", {})).forEach(([id, r]) => { if (r.deleted) byId.delete(id); else byId.set(id, r); });
+    return [...byId.values()];
+  }
+  let requestsChecked = false;
+  async function syncRequests() {
+    const note = $("#fl-req-status");
+    let list;
+    try { list = await loadRequests(); } catch (err) {
+      note.className = "form-status error";
+      note.textContent = "Couldn't check Request monitoring for issued fuel requisitions. Try Refresh later.";
+      return;
+    }
+    requestsChecked = true;
+    const fuel = new Map(list.filter((r) => r.kind === "fuel" && r.id).map((r) => [r.id, r]));
+    let added = 0, updated = 0, removed = 0;
+    const unmatched = [];
+    for (const r of fuel.values()) {
+      const existing = state.entries.find((e) => e.request === r.id);
+      if (r.status !== "Issued") {
+        if (existing) { state.entries = state.entries.filter((e) => e !== existing); removed++; }
+        continue;
+      }
+      if (state.skippedRequests.includes(r.id)) continue;
+      const unit = requestUnit(r.unit);
+      const litres = toNumber(r.issuedLitres) || toNumber(r.litres);
+      const from = r.dateFrom || r.date, to = r.dateTo && r.dateTo >= from ? r.dateTo : from;
+      if (!unit || !litres || litres <= 0 || !from) { unmatched.push(r.id); continue; }
+      if (existing) {
+        if (existing.unit !== unit.key || existing.litres !== litres || existing.from !== from || existing.to !== to) {
+          Object.assign(existing, { unit: unit.key, litres, from, to });
+          updated++;
+        }
+      } else {
+        state.entries.push({ id: "req-" + r.id, unit: unit.key, litres, from, to, request: r.id });
+        added++;
+      }
+    }
+    if (added || updated || removed) { changed(); renderAll(); }
+    const parts = [];
+    if (added) parts.push(`added ${added} issued fuel requisition${added === 1 ? "" : "s"}`);
+    if (updated) parts.push(`updated ${updated}`);
+    if (removed) parts.push(`removed ${removed} no longer marked Issued`);
+    note.className = "form-status" + (unmatched.length ? " error" : parts.length ? " success" : "");
+    note.textContent = (parts.length ? "From Request monitoring: " + parts.join(", ") + ". " : "") +
+      (unmatched.length ? `${unmatched.length} issued requisition${unmatched.length === 1 ? "" : "s"} couldn't be added (unit not in the fleet list, or no liters or dates): ${unmatched.slice(0, 5).join(", ")}.` : "");
+  }
+  $("#fl-req-refresh").addEventListener("click", () => syncRequests());
+  // Pick up requisitions issued while this page was open in another tab.
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && requestsChecked) syncRequests(); });
+
   // --- Tab badges --------------------------------------------------------
   function updateCounts() {
     const issues = findIssues(monthOf(todayISO)).length;
@@ -989,6 +1065,7 @@
     else {
       setSync("", "Saved in this browser");
       $("#fl-connect").hidden = !LOG_URL || Boolean(session.get("emd-fuel-log-later"));
+      syncRequests();
     }
     const tab = session.get("emd-fuel-log-tab");
     selectTab(tabs.some((t) => t.dataset.tab === tab) ? tab : "input");

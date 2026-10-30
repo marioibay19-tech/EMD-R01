@@ -87,7 +87,7 @@
             <button class="btn btn-accent btn-sm" type="submit">Add fuel</button>
           </form>
           <p class="form-status" id="fl-add-status" role="status" aria-live="polite"></p>
-          <p class="field-hint">Liters are split equally across the days (From to To, inclusive). Overlapping entries add up.</p>
+          <p class="field-hint">Liters are split equally across the days (From to To, inclusive). Overlapping entries add up. Fuel requisitions marked <b>Issued</b> in Request monitoring are added automatically (tagged with their FR no.), so don't type those again.</p>
           <div class="fl-subhead">
             <h3>Fuel entries</h3>
             <label class="fl-inline-label">Show
@@ -97,7 +97,9 @@
                 <option value="all">All</option>
               </select>
             </label>
+            <button class="btn btn-ghost btn-sm" type="button" id="fl-req-refresh">Check for issued requisitions</button>
           </div>
+          <p class="form-status" id="fl-req-status" role="status" aria-live="polite"></p>
           <div class="table-wrap fl-table-wrap">
             <table class="fl-table" id="fl-entries">
               <thead><tr><th>Vehicle</th><th>Plate</th><th class="num">Liters</th><th>From</th><th>To</th><th class="num">Days</th><th class="num">L/day</th><th><span class="sr-only">Delete</span></th></tr></thead>
@@ -250,6 +252,7 @@
 
   <script src="js/data.js"></script>
   <script src="js/fleet.js"></script>
+  <script src="js/requests.js"></script>
   <script src="js/content.js"></script>
   <script src="js/fuel-log.js"></script>
 </body>
