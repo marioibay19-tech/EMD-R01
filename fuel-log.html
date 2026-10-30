@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vehicle Fuel Log</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#0d2d57">
+  <link rel="icon" href="img/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="fuel-log">
+  <header class="site-header">
+    <div class="container fl-wide header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">EMD</span>
+        <span class="brand-text">
+          <span class="brand-agency">Equipment Management Division</span>
+          <span class="brand-office">Vehicle Fuel Log</span>
+        </span>
+      </a>
+      <div class="fl-header-actions">
+        <span class="fl-sync" id="fl-sync" role="status"></span>
+        <button class="btn btn-ghost btn-sm" type="button" id="fl-lock" hidden>Lock</button>
+        <a class="btn btn-ghost btn-sm admin-back" href="index.html">← Website</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container admin-main admin-lock" id="fl-locked" hidden>
+    <form class="form admin-login" id="fl-login">
+      <h1>Vehicle Fuel Log</h1>
+      <p>Enter the admin password to open the fuel log.</p>
+      <label class="field"><span>Password</span><input type="password" id="fl-password" autocomplete="current-password" required></label>
+      <button class="btn btn-primary" type="submit">Unlock</button>
+      <p class="form-status" id="fl-login-status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <main id="main" class="fl-main" hidden>
+    <nav class="fl-tabs" role="tablist" aria-label="Fuel log">
+      <div class="container fl-wide">
+        <button role="tab" type="button" data-tab="input" aria-selected="true">Input</button>
+        <button role="tab" type="button" data-tab="monitoring" aria-selected="false">Monitoring</button>
+        <button role="tab" type="button" data-tab="checks" aria-selected="false">Checks <span class="fl-count" id="fl-checks-count" hidden></span></button>
+        <button role="tab" type="button" data-tab="maintenance" aria-selected="false">Maintenance <span class="fl-count" id="fl-pm-count" hidden></span></button>
+        <button role="tab" type="button" data-tab="reports" aria-selected="false">Reports</button>
+        <button role="tab" type="button" data-tab="settings" aria-selected="false">Settings</button>
+      </div>
+    </nav>
+
+    <div class="container fl-wide fl-body">
+      <div class="live-bar is-loading fl-connect" id="fl-connect" hidden>
+        <p>Connect to the EMD Google Sheet so this log is shared between computers and kept safe if this browser's data is cleared.</p>
+        <form class="fl-inline" id="fl-connect-form">
+          <label class="sr-only" for="fl-staff-key">Staff key</label>
+          <input type="password" id="fl-staff-key" placeholder="Staff key" autocomplete="current-password" required>
+          <button class="btn btn-primary btn-sm" type="submit">Connect</button>
+          <button class="btn btn-link" type="button" id="fl-connect-later">Not now</button>
+        </form>
+      </div>
+
+      <!-- Input -->
+      <section class="fl-panel" id="tab-input" role="tabpanel">
+        <details class="fl-card fl-help" id="fl-help" open>
+          <summary>How to use this page</summary>
+          <ol>
+            <li><b>Add fuel</b> below: pick the vehicle, the liters, and the dates. The liters are shared equally across the days.</li>
+            <li><b>Every Monday morning and Friday afternoon</b>, type each vehicle's actual odometer in <b>Weekly odometer readings</b>. Friday afternoon is also next Monday morning (vehicles are not used on weekends), so Monday is filled in for you.</li>
+            <li><b>Monitoring</b> shows each day's fuel and the odometer worked out from it. <b>Bold</b> = a reading you typed; <i class="fl-computed">grey italic</i> = computed.</li>
+            <li><b>Checks</b> finds mistakes, <b>Maintenance</b> shows which vehicles are due for PM, and <b>Reports</b> gives the monthly summary.</li>
+          </ol>
+        </details>
+
+        <div class="fl-card">
+          <h2>Add fuel by date range</h2>
+          <form class="fl-inline fl-add" id="fl-add" novalidate>
+            <label class="sr-only" for="fl-add-unit">Vehicle</label>
+            <input id="fl-add-unit" list="fl-units" placeholder="Vehicle no. or plate" autocomplete="off" required>
+            <label class="sr-only" for="fl-add-litres">Liters</label>
+            <input id="fl-add-litres" type="number" min="0.1" step="0.01" inputmode="decimal" placeholder="Liters" required>
+            <label class="fl-date">From <input id="fl-add-from" type="date" required></label>
+            <label class="fl-date">To <input id="fl-add-to" type="date" required></label>
+            <button class="btn btn-accent btn-sm" type="submit">Add fuel</button>
+          </form>
+          <p class="form-status" id="fl-add-status" role="status" aria-live="polite"></p>
+          <p class="field-hint">Liters are split equally across the days (From to To, inclusive). Overlapping entries add up.</p>
+          <div class="fl-subhead">
+            <h3>Fuel entries</h3>
+            <label class="fl-inline-label">Show
+              <select id="fl-entries-range">
+                <option value="week">Week below</option>
+                <option value="month">Its month</option>
+                <option value="all">All</option>
+              </select>
+            </label>
+          </div>
+          <div class="table-wrap fl-table-wrap">
+            <table class="fl-table" id="fl-entries">
+              <thead><tr><th>Vehicle</th><th>Plate</th><th class="num">Liters</th><th>From</th><th>To</th><th class="num">Days</th><th class="num">L/day</th><th><span class="sr-only">Delete</span></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <p class="empty" id="fl-entries-empty" hidden>No fuel entries for this period.</p>
+          </div>
+        </div>
+
+        <div class="fl-card">
+          <h2>Weekly odometer readings</h2>
+          <div class="fl-inline fl-weekbar">
+            <button class="btn btn-ghost btn-sm" type="button" id="fl-week-prev">◀ Previous week</button>
+            <label class="sr-only" for="fl-week-date">Week</label>
+            <input type="date" id="fl-week-date">
+            <button class="btn btn-ghost btn-sm" type="button" id="fl-week-next">Next week ▶</button>
+            <input type="search" id="fl-read-search" placeholder="Search vehicle or plate…" autocomplete="off">
+            <span class="fl-week-label" id="fl-week-label"></span>
+            <label class="check fl-check"><input type="checkbox" id="fl-read-missing"> Show only vehicles with a missing reading</label>
+          </div>
+          <p class="fl-read-counts" id="fl-read-counts"></p>
+          <p class="field-hint">Type each vehicle's actual odometer for Monday morning and Friday afternoon of the chosen week. A Monday box shown in grey italics is last Friday's reading, carried over. It saves as you type.</p>
+          <div class="table-wrap fl-table-wrap">
+            <table class="fl-table" id="fl-readings">
+              <thead><tr><th>Vehicle</th><th>Plate</th><th>Unit</th><th>Monday morning</th><th>Friday afternoon</th><th class="num">km this week</th><th class="num">Fuel (L)</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Monitoring -->
+      <section class="fl-panel" id="tab-monitoring" role="tabpanel" hidden>
+        <div class="fl-inline fl-toolbar">
+          <label class="sr-only" for="fl-mon-month">Month</label>
+          <input type="month" id="fl-mon-month">
+          <label class="sr-only" for="fl-mon-week">Week</label>
+          <select id="fl-mon-week"></select>
+          <button class="btn btn-ghost btn-sm" type="button" id="fl-mon-today">Today</button>
+          <input type="search" id="fl-mon-search" placeholder="Search vehicle or plate…" autocomplete="off">
+          <label class="check fl-check"><input type="checkbox" id="fl-mon-active" checked> Only vehicles with fuel or readings</label>
+          <button class="btn btn-accent btn-sm" type="button" id="fl-export">Export CSV</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="fl-import-btn">Import CSV</button>
+          <input type="file" id="fl-import" accept=".csv,text/csv" class="sr-only">
+          <button class="btn btn-ghost btn-sm" type="button" id="fl-clear-month">Clear month</button>
+          <span class="fl-totals" id="fl-mon-totals"></span>
+        </div>
+        <p class="field-hint">Odometer row: <b>bold</b> = a reading you typed · <i class="fl-computed">grey italic</i> = computed from the fuel. Weekend days with no fuel are left blank. Today is highlighted. A Friday cell shows the Friday afternoon reading. Import CSV accepts fuel (Vehicle, Liters, From, To) or readings (Vehicle, Date, Odometer).</p>
+        <p class="form-status" id="fl-import-status" role="status" aria-live="polite"></p>
+        <div class="table-wrap fl-grid-wrap">
+          <table class="fl-grid" id="fl-grid"></table>
+          <p class="empty" id="fl-grid-empty" hidden>No vehicles with fuel or readings in this period. Untick “Only vehicles with fuel or readings” to see all units.</p>
+        </div>
+      </section>
+
+      <!-- Checks -->
+      <section class="fl-panel" id="tab-checks" role="tabpanel" hidden>
+        <div class="fl-inline fl-toolbar">
+          <label class="sr-only" for="fl-chk-month">Month</label>
+          <input type="month" id="fl-chk-month">
+          <span class="fl-totals" id="fl-chk-summary"></span>
+        </div>
+        <div class="fl-checks" id="fl-checks"></div>
+      </section>
+
+      <!-- Maintenance -->
+      <section class="fl-panel" id="tab-maintenance" role="tabpanel" hidden>
+        <div class="fl-inline fl-toolbar">
+          <input type="search" id="fl-pm-search" placeholder="Search vehicle or plate…" autocomplete="off">
+          <label class="check fl-check"><input type="checkbox" id="fl-pm-due"> Only due or due soon</label>
+          <span class="fl-totals" id="fl-pm-summary"></span>
+        </div>
+        <p class="field-hint" id="fl-pm-hint"></p>
+        <div class="table-wrap fl-table-wrap">
+          <table class="fl-table" id="fl-pm">
+            <thead><tr><th>Vehicle</th><th>Plate</th><th>Unit</th><th class="num">Latest odometer</th><th>Last PM (odometer)</th><th>Last PM date</th><th class="num">Since PM</th><th class="num">Next PM at</th><th>Status</th><th><span class="sr-only">Record PM</span></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section class="fl-panel" id="tab-reports" role="tabpanel" hidden>
+        <div class="fl-inline fl-toolbar">
+          <label class="sr-only" for="fl-rep-month">Month</label>
+          <input type="month" id="fl-rep-month">
+          <button class="btn btn-accent btn-sm" type="button" id="fl-rep-export">Export CSV</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="fl-rep-print">Print</button>
+        </div>
+        <div class="monitor-stats" id="fl-rep-stats"></div>
+        <h2 class="fl-rep-title" id="fl-rep-title"></h2>
+        <div class="table-wrap fl-table-wrap">
+          <table class="fl-table" id="fl-rep">
+            <thead><tr><th>Vehicle</th><th>Plate</th><th>Unit</th><th>Office</th><th class="num">Fuel (L)</th><th class="num">km</th><th class="num">km/L</th><th class="num">Fuel entries</th></tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+          <p class="empty" id="fl-rep-empty" hidden>No fuel or readings in this month.</p>
+        </div>
+        <h3 class="fl-rep-title">By office</h3>
+        <div class="table-wrap fl-table-wrap">
+          <table class="fl-table" id="fl-rep-office">
+            <thead><tr><th>Office</th><th class="num">Vehicles</th><th class="num">Fuel (L)</th><th class="num">km</th><th class="num">km/L</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="fl-panel" id="tab-settings" role="tabpanel" hidden>
+        <form class="fl-card form" id="fl-settings">
+          <h2>Settings</h2>
+          <div class="form-row">
+            <label class="field"><span>PM interval (km)</span><input type="number" name="pmInterval" min="500" step="100"></label>
+            <label class="field"><span>“Due soon” within (km)</span><input type="number" name="dueSoon" min="0" step="50"></label>
+          </div>
+          <div class="form-row">
+            <label class="field"><span>Lowest normal km per liter</span><input type="number" name="kmlMin" min="0" step="0.5"></label>
+            <label class="field"><span>Highest normal km per liter</span><input type="number" name="kmlMax" min="1" step="0.5"></label>
+          </div>
+          <label class="check"><input type="checkbox" name="includeNoPlate"> Include units without a plate (equipment with an hour meter)</label>
+          <p class="form-status" id="fl-settings-status" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="fl-card">
+          <h2>Where the log is saved</h2>
+          <p id="fl-store-text"></p>
+          <div class="fl-inline">
+            <button class="btn btn-ghost btn-sm" type="button" id="fl-sync-now" hidden>Save to Google Sheet now</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="fl-sync-connect" hidden>Connect to Google Sheet</button>
+          </div>
+        </div>
+
+        <div class="fl-card">
+          <h2>Backup</h2>
+          <p>Download everything in the fuel log as one file, or restore from a backup file. Restoring replaces the current log.</p>
+          <div class="fl-inline">
+            <button class="btn btn-primary btn-sm" type="button" id="fl-backup">Download backup</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="fl-restore-btn">Restore from backup…</button>
+            <input type="file" id="fl-restore" accept=".json,application/json" class="sr-only">
+            <button class="btn btn-link" type="button" id="fl-clear-all">Delete all fuel log data</button>
+          </div>
+          <p class="form-status" id="fl-backup-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <datalist id="fl-units"></datalist>
+
+  <script src="js/data.js"></script>
+  <script src="js/fleet.js"></script>
+  <script src="js/content.js"></script>
+  <script src="js/fuel-log.js"></script>
+</body>
+</html>

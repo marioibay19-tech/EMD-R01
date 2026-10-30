@@ -39,6 +39,12 @@ It is free and needs a Google account. Use the office's account if you have one,
 - **Paper or phone requests:** use **Add request** on the website (it gives the next request no.), or add a row in the sheet yourself.
 - **Who can see the sheet:** only people you share it with. Share it with EMD staff who need to update statuses. The public website shows the list without contact numbers.
 
+## Vehicle fuel log
+
+The website's **Vehicle fuel log** (`fuel-log.html`) can save to the same sheet, in a **FuelLog** tab the script creates. This needs the latest `Code.gs`. If you set up the sheet before the fuel log was added, update the script (next section) once. On the fuel log page, click **Connect** and enter the staff key. The log is then shared by every computer that connects, and saved there even if a browser's data is cleared. Don't edit the FuelLog tab by hand.
+
+If two computers save at almost the same moment, the later one loads the other's copy and shows a message; re-enter the last change if it is missing. (Its own copy is kept in that browser as a precaution.)
+
 ## Changing the script later
 
 After pasting new code, use **Deploy → Manage deployments → Edit (pencil) → Version: New version → Deploy**. The web app URL stays the same.

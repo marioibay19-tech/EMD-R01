@@ -57,6 +57,8 @@ function doPost(e) {
       case "update": return reply(staffOnly(body.key, function () { return update(body.request || {}); }));
       case "delete": return reply(staffOnly(body.key, function () { return remove(body.id); }));
       case "check": return reply(staffOnly(body.key, function () { return { ok: true }; }));
+      case "fuellog-load": return reply(staffOnly(body.key, loadFuelLog));
+      case "fuellog-save": return reply(staffOnly(body.key, function () { return saveFuelLog(body.data, body.baseVersion); }));
       default: return reply({ ok: false, error: "Unknown action." });
     }
   } finally {
@@ -243,6 +245,65 @@ function today() {
 
 function timestamp() {
   return Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd HH:mm");
+}
+
+// --- Vehicle fuel log (fuel-log.html) ---------------------------------------
+// The whole log is kept as JSON on the FuelLog tab: A1 = version, B1 = saved
+// time, and the JSON split over column A from row 2 (a cell holds at most
+// 50,000 characters). Staff key required to read or save.
+
+var FUEL_SHEET = "FuelLog";
+var CHUNK = 45000;
+
+function fuelSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(FUEL_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(FUEL_SHEET);
+    sheet.getRange(1, 1, 1, 3).setValues([[0, "", "Saved by the website's Vehicle Fuel Log. Don't edit this tab by hand."]]);
+  }
+  return sheet;
+}
+
+function readFuelLog() {
+  var sheet = fuelSheet();
+  var head = sheet.getRange(1, 1, 1, 2).getValues()[0];
+  var last = sheet.getLastRow();
+  var json = "";
+  if (last >= 2) {
+    json = sheet.getRange(2, 1, last - 1, 1).getValues().map(function (r) { return String(r[0]); }).join("");
+  }
+  var data = null;
+  if (json) {
+    try { data = JSON.parse(json); } catch (err) { data = null; }
+  }
+  var saved = head[1] instanceof Date ? head[1].toISOString() : String(head[1] || "");
+  return { version: Number(head[0]) || 0, savedAt: saved, data: data };
+}
+
+function loadFuelLog() {
+  var log = readFuelLog();
+  return { ok: true, version: log.version, savedAt: log.savedAt, data: log.data };
+}
+
+function saveFuelLog(data, baseVersion) {
+  if (!data || typeof data !== "object") return { ok: false, error: "Nothing to save." };
+  var current = readFuelLog();
+  // Someone else saved since this browser last loaded: send their copy back.
+  if (Number(baseVersion) !== current.version) {
+    return { ok: false, conflict: true, error: "Someone else saved changes first.", version: current.version, data: current.data };
+  }
+  var json = JSON.stringify(data);
+  var chunks = [];
+  for (var i = 0; i < json.length; i += CHUNK) chunks.push([json.slice(i, i + CHUNK)]);
+  var sheet = fuelSheet();
+  var last = sheet.getLastRow();
+  if (last >= 2) sheet.getRange(2, 1, last - 1, 1).clearContent();
+  if (chunks.length) sheet.getRange(2, 1, chunks.length, 1).setNumberFormat("@").setValues(chunks);
+  var version = current.version + 1;
+  var savedAt = new Date().toISOString();
+  sheet.getRange(1, 1, 1, 2).setValues([[version, savedAt]]);
+  return { ok: true, version: version, savedAt: savedAt };
 }
 
 // --- One-time setup --------------------------------------------------------

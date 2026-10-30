@@ -15,6 +15,7 @@ A static, dependency-free web page for the Equipment Management Division (EMD).
 - **Forms**: blank maintenance request form and fuel slip (printable), trip ticket, inspection reports, job order, PAR, and more
 - **Reports**: operating hours by equipment type and monthly fuel consumption
 - **Announcements**, **Organization** (division chief, sections, staff, offices served) and **Contact**
+- **Vehicle fuel log** (`fuel-log.html`, password-protected with the Admin password): fuel entered by date range (split equally across the days) and odometer readings every Monday morning and Friday afternoon; **Monitoring** works out each day's odometer in proportion to the fuel used, with week and month totals, CSV export/import; **Checks** flags readings that go backwards, missing readings, km without fuel and unusual km per liter; **Maintenance** shows which vehicles are due for PM by km; **Reports** gives the monthly fuel, km and km/L by vehicle and office. Saved in the browser and, once connected, in the Google Sheet (see `google-apps-script/README.md`)
 - **Admin** (`admin.html`): edit announcements, the organization chart and forms without touching code
 
 Responsive down to phone width, with light/dark mode (follows the system, toggle in the header).
